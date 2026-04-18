@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline';">
+    <title>Musik-Quiz - 200 Fragen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            color: #764ba2;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .quiz-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .question-container {
+            margin-bottom: 30px;
+        }
+
+        .question {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .answers {
+            display: grid;
+            gap: 15px;
+        }
+
+        .answer-btn {
+            background: #f5f5f5;
+            border: 2px solid #ddd;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
+            text-align: left;
+        }
+
+        .answer-btn:hover {
+            background: #e8e8ff;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .answer-btn.correct {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .answer-btn.wrong {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .answer-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .next-btn, .start-btn, .restart-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto 0;
+            transition: transform 0.3s ease;
+        }
+
+        .next-btn:hover, .start-btn:hover, .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .result-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .result-screen h2 {
+            color: #764ba2;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+
+        .score-display {
+            font-size: 3em;
+            color: #667eea;
+            margin: 30px 0;
+            font-weight: bold;
+        }
+
+        .stars {
+            font-size: 4em;
+            margin: 20px 0;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .start-screen p {
+            font-size: 1.2em;
+            color: #666;
+            margin: 20px 0;
+        }
+
+        /* Auswahlbereich */
+        .selection-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .selection-section h3 {
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .checkbox-group {
+            display: grid;
+            gap: 12px;
+            margin: 15px 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            font-size: 1.1em;
+            flex: 1;
+        }
+
+        .radio-group {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .radio-item:hover {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+
+        .radio-item input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .radio-item label {
+            cursor: pointer;
+            font-size: 1.1em;
+            flex: 1;
+        }
+
+        .custom-number-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .custom-number-input input[type="number"] {
+            width: 100px;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1.1em;
+        }
+
+        .error-message {
+            color: #f44336;
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        /* Animationen */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .note {
+            position: absolute;
+            font-size: 3em;
+            animation: float 3s ease-in-out infinite;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .star {
+            position: fixed;
+            color: gold;
+            font-size: 2em;
+            pointer-events: none;
+            animation: fall 3s linear;
+            z-index: 1000;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .celebration {
+            animation: fadeIn 0.5s ease;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="note" style="top: 10%; left: 10%;">🎵</div>
+    <div class="note" style="top: 20%; right: 15%; animation-delay: 0.5s;">🎶</div>
+    <div class="note" style="bottom: 30%; left: 20%; animation-delay: 1s;">🎼</div>
+    <div class="note" style="bottom: 20%; right: 25%; animation-delay: 1.5s;">🎵</div>
+
+    <div class="container">
+        <h1>🎵 Großes Musik-Quiz 🎵</h1>
+        
+        <!-- Start-Bildschirm -->
+        <div id="startScreen" class="start-screen">
+            <p>Teste dein Wissen über Instrumente, Komponisten, Musicals und Musik-Epochen!</p>
+            
+            <div class="selection-section">
+                <h3>📚 Wähle deine Kategorien:</h3>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cat1" value="Instrumente" checked>
+                        <label for="cat1">🎺 Instrumente (60 Fragen)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cat2" value="Komponisten" checked>
+                        <label for="cat2">🎼 Komponisten (60 Fragen)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cat3" value="Musicals" checked>
+                        <label for="cat3">🎭 Musicals & Musikstücke (40 Fragen)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cat4" value="Epochen" checked>
+                        <label for="cat4">📜 Musik-Epochen (40 Fragen)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="selection-section">
+                <h3>🎯 Wie viele Fragen möchtest du?</h3>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" id="q20" name="questionCount" value="20">
+                        <label for="q20">20 Fragen</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="q30" name="questionCount" value="30" checked>
+                        <label for="q30">30 Fragen</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="q40" name="questionCount" value="40">
+                        <label for="q40">40 Fragen</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="qCustom" name="questionCount" value="custom">
+                        <label for="qCustom">Eigene Anzahl:</label>
+                    </div>
+                </div>
+                <div id="customNumberContainer" class="custom-number-input" style="display: none;">
+                    <label for="customNumber">Anzahl Fragen:</label>
+                    <input type="number" id="customNumber" min="1" max="200" value="50">
+                </div>
+            </div>
+
+            <div id="errorMessage" class="error-message"></div>
+
+            <button class="start-btn" onclick="startQuiz()">Quiz starten 🎶</button>
+        </div>
+
+        <!-- Quiz-Bildschirm -->
+        <div id="quizScreen" class="hidden">
+            <div class="quiz-info">
+                <p>Frage <span id="currentQuestion">1</span> von <span id="totalQuestions">40</span></p>
+                <p style="margin-top: 10px;">Punkte: <span id="score">0</span></p>
+            </div>
+
+            <div class="progress-bar">
+                <div id="progressBar" class="progress-fill">0%</div>
+            </div>
+
+            <div class="question-container">
+                <div id="question" class="question"></div>
+                <div id="answers" class="answers"></div>
+            </div>
+
+            <button id="nextBtn" class="next-btn hidden" onclick="nextQuestion()">Nächste Frage →</button>
+        </div>
+
+        <!-- Ergebnis-Bildschirm -->
+        <div id="resultScreen" class="result-screen">
+            <h2>Quiz beendet! 🎉</h2>
+            <div class="score-display">
+                <span id="finalScore">0</span> / <span id="finalTotal">40</span>
+            </div>
+            <div class="stars" id="starRating"></div>
+            <p id="resultMessage" style="font-size: 1.4em; color: #333; margin: 20px 0;"></p>
+            <button class="restart-btn" onclick="location.reload()">Noch einmal spielen</button>
+        </div>
+    </div>
+
+    <script>
+        // Fragenkatalog
+        const allQuestions = [
+            // INSTRUMENTE (60 Fragen)
+            {q: "Wie viele Tasten hat ein Standard-Klavier?", a: ["88", "76", "61", "100"], c: 0, cat: "Instrumente"},
+            {q: "Woraus besteht ein Geigenbogen traditionell?", a: ["Rosshaare", "Nylonfäden", "Draht", "Menschenhaar"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument gehört zu den Holzblasinstrumenten?", a: ["Oboe", "Trompete", "Posaune", "Horn"], c: 0, cat: "Instrumente"},
+            {q: "Wie viele Saiten hat eine Standard-Gitarre?", a: ["6", "4", "8", "12"], c: 0, cat: "Instrumente"},
+            {q: "Welches ist das größte Streichinstrument im Orchester?", a: ["Kontrabass", "Cello", "Bratsche", "Geige"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt das traditionelle japanische Saiteninstrument?", a: ["Koto", "Sitar", "Banjo", "Ukulele"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument hat Pedale, Register und Pfeifen?", a: ["Orgel", "Klavier", "Harfe", "Akkordeon"], c: 0, cat: "Instrumente"},
+            {q: "Wie viele Ventile hat eine Standard-Trompete?", a: ["3", "2", "4", "5"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument wird mit einem Doppelrohrblatt gespielt?", a: ["Fagott", "Klarinette", "Flöte", "Saxophon"], c: 0, cat: "Instrumente"},
+            {q: "Wie nennt man die große Trommel im Schlagzeug?", a: ["Bass Drum", "Snare Drum", "Tom Tom", "Hi-Hat"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument erfand Adolphe Sax?", a: ["Saxophon", "Klarinette", "Trompete", "Tuba"], c: 0, cat: "Instrumente"},
+            {q: "Wie viele Saiten hat eine Violine?", a: ["4", "5", "6", "3"], c: 0, cat: "Instrumente"},
+            {q: "Welches ist das höchste Holzblasinstrument?", a: ["Piccolo-Flöte", "Flöte", "Oboe", "Klarinette"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt das schottische Dudelsack-Instrument?", a: ["Bagpipe", "Accordion", "Harmonica", "Pipe Organ"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument hat 47 Saiten und 7 Pedale?", a: ["Konzertharfe", "Klavier", "Cembalo", "Zither"], c: 0, cat: "Instrumente"},
+            {q: "Wie nennt man ein kleines Klavier?", a: ["Spinett", "Cembalo", "Orgel", "Harmonium"], c: 0, cat: "Instrumente"},
+            {q: "Welches Blechblasinstrument hat einen Zug statt Ventilen?", a: ["Posaune", "Trompete", "Horn", "Tuba"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt die kleinste Tuba?", a: ["Euphonium", "Sousaphon", "Helikon", "Bombardon"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument ist das Nationalinstrument von Irland?", a: ["Harfe", "Geige", "Dudelsack", "Flöte"], c: 0, cat: "Instrumente"},
+            {q: "Wie viele Tasten hat ein Akkordeon mindestens?", a: ["41", "88", "61", "120"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument gehört zur Familie der Zupfinstrumente?", a: ["Mandoline", "Oboe", "Klarinette", "Fagott"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt die hohe Holzquerflöte?", a: ["Piccolo", "Altflöte", "Bassflöte", "Panflöte"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument wird mit Schlägeln gespielt?", a: ["Xylophon", "Gitarre", "Cello", "Harfe"], c: 0, cat: "Instrumente"},
+            {q: "Wie nennt man die metallene Mundharmonika?", a: ["Blues Harp", "Melodica", "Kazoo", "Okarina"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument hat einen Schalltrichter und Ventile?", a: ["Trompete", "Geige", "Gitarre", "Klavier"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt das indische Saiteninstrument mit vielen Resonanzsaiten?", a: ["Sitar", "Koto", "Banjo", "Ukulele"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument ist eine kleine Gitarre aus Hawaii?", a: ["Ukulele", "Banjo", "Mandoline", "Balalaika"], c: 0, cat: "Instrumente"},
+            {q: "Wie viele Löcher hat eine Blockflöte (barock)?", a: ["8", "6", "10", "7"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument wird elektronisch verstärkt?", a: ["E-Gitarre", "Geige", "Flöte", "Klarinette"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt das größte Blechblasinstrument?", a: ["Tuba", "Posaune", "Horn", "Trompete"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument besteht aus Holzstäben unterschiedlicher Länge?", a: ["Marimba", "Trommel", "Becken", "Triangel"], c: 0, cat: "Instrumente"},
+            {q: "Wie nennt man eine kleine Geige?", a: ["Pochette", "Bratsche", "Cello", "Kontrabass"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument hat einen Blasebalg?", a: ["Akkordeon", "Gitarre", "Harfe", "Xylophon"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt die tiefe Klarinette?", a: ["Bassklarinette", "Oboe", "Fagott", "Kontrafagott"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument wird mit einem Bogen gestrichen?", a: ["Cello", "Gitarre", "Harfe", "Klavier"], c: 0, cat: "Instrumente"},
+            {q: "Wie viele Saiten hat ein Bass?", a: ["4", "6", "5", "3"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument klingt eine Oktave tiefer als notiert?", a: ["Kontrabass", "Cello", "Geige", "Bratsche"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt das australische Blasinstrument?", a: ["Didgeridoo", "Panflöte", "Okarina", "Kazoo"], c: 0, cat: "Instrumente"},
+            {q: "Welches Tasteninstrument hat Pfeifen wie eine Orgel?", a: ["Harmonium", "Klavier", "Cembalo", "Akkordeon"], c: 0, cat: "Instrumente"},
+            {q: "Wie nennt man die kleine Trommel im Schlagzeug?", a: ["Snare Drum", "Bass Drum", "Tom Tom", "Floor Tom"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument hat ein Schalloch in der Mitte?", a: ["Gitarre", "Geige", "Klavier", "Trompete"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt das tiefste Fagott?", a: ["Kontrafagott", "Bassfagott", "Tenorfagott", "Altfagott"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument wird im Jazz oft als 'Sax' abgekürzt?", a: ["Saxophon", "Klarinette", "Trompete", "Posaune"], c: 0, cat: "Instrumente"},
+            {q: "Wie viele Pedale hat ein Flügel normalerweise?", a: ["3", "2", "4", "1"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument ist ein elektronisches Tasteninstrument?", a: ["Synthesizer", "Cembalo", "Spinett", "Clavichord"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt die tiefe Geige?", a: ["Cello", "Bratsche", "Kontrabass", "Viola"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument hat rotierende Lautsprecher?", a: ["Hammond-Orgel", "Klavier", "Gitarre", "Synthesizer"], c: 0, cat: "Instrumente"},
+            {q: "Wie nennt man das metallene Perkussionsinstrument?", a: ["Triangel", "Trommel", "Pauke", "Xylophon"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument wird durch Luft zum Klingen gebracht?", a: ["Flöte", "Gitarre", "Klavier", "Harfe"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt das Hauptinstrument in der Rock-Band?", a: ["E-Gitarre", "Geige", "Harfe", "Oboe"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument wird mit Fingern gezupft?", a: ["Harfe", "Trompete", "Oboe", "Klarinette"], c: 0, cat: "Instrumente"},
+            {q: "Wie viele Saiten hat ein Banjo traditionell?", a: ["5", "4", "6", "8"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument wird oft in der Country-Musik verwendet?", a: ["Banjo", "Oboe", "Fagott", "Horn"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt die russische Gitarre mit dreieckigem Körper?", a: ["Balalaika", "Sitar", "Koto", "Ukulele"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument hat Metallplatten und wird angeschlagen?", a: ["Glockenspiel", "Trommel", "Pauke", "Becken"], c: 0, cat: "Instrumente"},
+            {q: "Wie nennt man die größte Pauke?", a: ["Große Trommel", "Snare", "Tom", "Kesselpauke"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument wird in der klassischen Musik 'Violine' genannt?", a: ["Geige", "Bratsche", "Cello", "Kontrabass"], c: 0, cat: "Instrumente"},
+            {q: "Wie heißt das Zupfinstrument mit rundem Korpus?", a: ["Banjo", "Geige", "Trompete", "Oboe"], c: 0, cat: "Instrumente"},
+            {q: "Welches Instrument hat die meisten Tasten?", a: ["Orgel", "Klavier", "Akkordeon", "Synthesizer"], c: 0, cat: "Instrumente"},
+            {q: "Wie nennt man eine kleine Trompete?", a: ["Kornett", "Posaune", "Tuba", "Horn"], c: 0, cat: "Instrumente"},
+
+            // KOMPONISTEN (60 Fragen)
+            {q: "Wer komponierte die 'Mondscheinsonate'?", a: ["Ludwig van Beethoven", "Wolfgang Amadeus Mozart", "Johann Sebastian Bach", "Franz Schubert"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist wurde 'Wunderkind' genannt?", a: ["Wolfgang Amadeus Mozart", "Ludwig van Beethoven", "Franz Liszt", "Felix Mendelssohn"], c: 0, cat: "Komponisten"},
+            {q: "Wer schrieb 'Die vier Jahreszeiten'?", a: ["Antonio Vivaldi", "Johann Sebastian Bach", "Georg Friedrich Händel", "Henry Purcell"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist war taub?", a: ["Ludwig van Beethoven", "Johann Sebastian Bach", "Joseph Haydn", "Franz Schubert"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte den 'Nussknacker'?", a: ["Peter Tschaikowsky", "Igor Strawinsky", "Sergei Rachmaninow", "Dmitri Schostakowitsch"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist hatte 20 Kinder?", a: ["Johann Sebastian Bach", "Joseph Haydn", "Wolfgang Amadeus Mozart", "Antonio Vivaldi"], c: 0, cat: "Komponisten"},
+            {q: "Wer schrieb die Oper 'Carmen'?", a: ["Georges Bizet", "Giuseppe Verdi", "Giacomo Puccini", "Richard Wagner"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist komponierte die '9. Sinfonie' mit 'Ode an die Freude'?", a: ["Ludwig van Beethoven", "Johannes Brahms", "Gustav Mahler", "Anton Bruckner"], c: 0, cat: "Komponisten"},
+            {q: "Wer schrieb 'Eine kleine Nachtmusik'?", a: ["Wolfgang Amadeus Mozart", "Joseph Haydn", "Ludwig van Beethoven", "Franz Schubert"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist war auch ein virtuoser Pianist?", a: ["Franz Liszt", "Antonio Vivaldi", "Richard Wagner", "Giuseppe Verdi"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Die Zauberflöte'?", a: ["Wolfgang Amadeus Mozart", "Richard Wagner", "Giuseppe Verdi", "Giacomo Puccini"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist stammt aus Polen?", a: ["Frédéric Chopin", "Franz Liszt", "Antonín Dvořák", "Bedřich Smetana"], c: 0, cat: "Komponisten"},
+            {q: "Wer schrieb die 'Unvollendete Sinfonie'?", a: ["Franz Schubert", "Johannes Brahms", "Robert Schumann", "Felix Mendelssohn"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb den 'Bolero'?", a: ["Maurice Ravel", "Claude Debussy", "Erik Satie", "Camille Saint-Saëns"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Schwanensee'?", a: ["Peter Tschaikowsky", "Sergei Prokofjew", "Igor Strawinsky", "Dmitri Schostakowitsch"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist war der 'Walzerkönig'?", a: ["Johann Strauss (Sohn)", "Joseph Lanner", "Franz Lehár", "Emile Waldteufel"], c: 0, cat: "Komponisten"},
+            {q: "Wer schrieb 'Für Elise'?", a: ["Ludwig van Beethoven", "Wolfgang Amadeus Mozart", "Franz Schubert", "Robert Schumann"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist komponierte 'Der Karneval der Tiere'?", a: ["Camille Saint-Saëns", "Maurice Ravel", "Claude Debussy", "Gabriel Fauré"], c: 0, cat: "Komponisten"},
+            {q: "Wer schrieb die Oper 'Aida'?", a: ["Giuseppe Verdi", "Giacomo Puccini", "Georges Bizet", "Richard Wagner"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Bilder einer Ausstellung'?", a: ["Modest Mussorgski", "Nikolai Rimski-Korsakow", "Alexander Borodin", "Pjotr Tschaikowski"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte die 'Kleine Nachtmusik'?", a: ["Wolfgang Amadeus Mozart", "Joseph Haydn", "Luigi Boccherini", "Carl Philipp Emanuel Bach"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Finlandia'?", a: ["Jean Sibelius", "Edvard Grieg", "Carl Nielsen", "Johan Svendsen"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Die Moldau'?", a: ["Bedřich Smetana", "Antonín Dvořák", "Leoš Janáček", "Bohuslav Martinů"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Peer Gynt'?", a: ["Edvard Grieg", "Jean Sibelius", "Carl Nielsen", "Johan Svendsen"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Rhapsody in Blue'?", a: ["George Gershwin", "Aaron Copland", "Leonard Bernstein", "Duke Ellington"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Also sprach Zarathustra'?", a: ["Richard Strauss", "Gustav Mahler", "Anton Bruckner", "Max Reger"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Dornröschen' (Ballett)?", a: ["Peter Tschaikowsky", "Sergei Prokofjew", "Igor Strawinsky", "Aram Chatschaturjan"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Die Planeten'?", a: ["Gustav Holst", "Edward Elgar", "Ralph Vaughan Williams", "Benjamin Britten"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte den 'Hochzeitsmarsch'?", a: ["Felix Mendelssohn", "Richard Wagner", "Johann Sebastian Bach", "Charles Gounod"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'La Traviata'?", a: ["Giuseppe Verdi", "Giacomo Puccini", "Gioachino Rossini", "Vincenzo Bellini"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Carmina Burana'?", a: ["Carl Orff", "Paul Hindemith", "Kurt Weill", "Hans Werner Henze"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'West Side Story'?", a: ["Leonard Bernstein", "George Gershwin", "Richard Rodgers", "Stephen Sondheim"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Der Feuervogel'?", a: ["Igor Strawinsky", "Sergei Prokofjew", "Dmitri Schostakowitsch", "Aram Chatschaturjan"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Tosca'?", a: ["Giacomo Puccini", "Giuseppe Verdi", "Pietro Mascagni", "Ruggero Leoncavallo"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Ein Sommernachtstraum'?", a: ["Felix Mendelssohn", "Robert Schumann", "Carl Maria von Weber", "Johannes Brahms"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Aus der Neuen Welt' (Sinfonie)?", a: ["Antonín Dvořák", "Bedřich Smetana", "Leoš Janáček", "Bohuslav Martinů"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Präludium in C-Dur'?", a: ["Johann Sebastian Bach", "Georg Friedrich Händel", "Antonio Vivaldi", "Domenico Scarlatti"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Der Barbier von Sevilla'?", a: ["Gioachino Rossini", "Wolfgang Amadeus Mozart", "Giuseppe Verdi", "Gaetano Donizetti"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Tannhäuser'?", a: ["Richard Wagner", "Richard Strauss", "Carl Maria von Weber", "Otto Nicolai"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Boléro'?", a: ["Maurice Ravel", "Claude Debussy", "Erik Satie", "Francis Poulenc"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte '1812 Ouvertüre'?", a: ["Peter Tschaikowsky", "Modest Mussorgski", "Nikolai Rimski-Korsakow", "Alexander Borodin"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Messias'?", a: ["Georg Friedrich Händel", "Johann Sebastian Bach", "Henry Purcell", "Claudio Monteverdi"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Die Schöpfung'?", a: ["Joseph Haydn", "Wolfgang Amadeus Mozart", "Ludwig van Beethoven", "Franz Schubert"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Kinderszenen'?", a: ["Robert Schumann", "Felix Mendelssohn", "Johannes Brahms", "Franz Liszt"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Daphnis et Chloé'?", a: ["Maurice Ravel", "Claude Debussy", "Gabriel Fauré", "Camille Saint-Saëns"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Romeo und Julia' (Ouvertüre)?", a: ["Peter Tschaikowsky", "Hector Berlioz", "Sergei Prokofjew", "Charles Gounod"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Wassermusik'?", a: ["Georg Friedrich Händel", "Johann Sebastian Bach", "Antonio Vivaldi", "Arcangelo Corelli"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Die Frau ohne Schatten'?", a: ["Richard Strauss", "Richard Wagner", "Alban Berg", "Arnold Schönberg"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'La Bohème'?", a: ["Giacomo Puccini", "Giuseppe Verdi", "Gioachino Rossini", "Gaetano Donizetti"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Die verkaufte Braut'?", a: ["Bedřich Smetana", "Antonín Dvořák", "Leoš Janáček", "Bohuslav Martinů"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Scheherazade'?", a: ["Nikolai Rimski-Korsakow", "Modest Mussorgski", "Alexander Borodin", "César Cui"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Präludium und Fuge'?", a: ["Johann Sebastian Bach", "Dieterich Buxtehude", "Johann Pachelbel", "Georg Friedrich Händel"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Finlandia-Hymne'?", a: ["Jean Sibelius", "Edvard Grieg", "Carl Nielsen", "Johan Svendsen"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Sinfonie fantastique'?", a: ["Hector Berlioz", "Camille Saint-Saëns", "César Franck", "Gabriel Fauré"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Das Rheingold'?", a: ["Richard Wagner", "Richard Strauss", "Carl Maria von Weber", "Engelbert Humperdinck"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Nabucco'?", a: ["Giuseppe Verdi", "Giacomo Puccini", "Gioachino Rossini", "Vincenzo Bellini"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Clair de Lune'?", a: ["Claude Debussy", "Maurice Ravel", "Erik Satie", "Gabriel Fauré"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Ungarische Tänze'?", a: ["Johannes Brahms", "Franz Liszt", "Béla Bartók", "Zoltán Kodály"], c: 0, cat: "Komponisten"},
+            {q: "Wer komponierte 'Rigoletto'?", a: ["Giuseppe Verdi", "Giacomo Puccini", "Gaetano Donizetti", "Vincenzo Bellini"], c: 0, cat: "Komponisten"},
+            {q: "Welcher Komponist schrieb 'Salome'?", a: ["Richard Strauss", "Richard Wagner", "Alban Berg", "Arnold Schönberg"], c: 0, cat: "Komponisten"},
+
+            // MUSICALS & MUSIKSTÜCKE (40 Fragen)
+            {q: "In welchem Musical singt Maria 'My Favorite Things'?", a: ["The Sound of Music", "West Side Story", "My Fair Lady", "Cats"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical erzählt die Geschichte von T. E. Lawrence?", a: ["Lawrence von Arabien", "Miss Saigon", "Chess", "Evita"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical kommt der Song 'Memory' vor?", a: ["Cats", "Phantom der Oper", "Les Misérables", "Starlight Express"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical spielt in Argentinien?", a: ["Evita", "West Side Story", "Chicago", "Cabaret"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical gibt es den Song 'Defying Gravity'?", a: ["Wicked", "Hamilton", "Dear Evan Hansen", "The Book of Mormon"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical basiert auf einem Roman von Victor Hugo?", a: ["Les Misérables", "Notre Dame de Paris", "Der Glöckner von Notre Dame", "Das Phantom der Oper"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical kommt 'Hakuna Matata' vor?", a: ["Der König der Löwen", "Tarzan", "Aladdin", "Die Schöne und das Biest"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical wurde von ABBA-Songs inspiriert?", a: ["Mamma Mia!", "Chess", "Kristina från Duvemåla", "Thank You for the Music"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical singt 'The Phantom'?", a: ["Das Phantom der Oper", "Tanz der Vampire", "Jekyll & Hyde", "Dracula"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical spielt in der Prohibition?", a: ["Chicago", "Cabaret", "Guys and Dolls", "42nd Street"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical gibt es 'Do You Hear the People Sing'?", a: ["Les Misérables", "Miss Saigon", "Hamilton", "Newsies"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical basiert auf Romeo und Julia?", a: ["West Side Story", "& Juliet", "Romeo et Juliette", "Grease"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical kommt 'Tomorrow' vor?", a: ["Annie", "Oliver!", "Into the Woods", "Matilda"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical spielt in Berlin der 1930er?", a: ["Cabaret", "Ich war noch niemals in New York", "Hinterm Horizont", "Ludwig²"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical gibt es 'Ein bisschen Spaß muss sein'?", a: ["Die Csárdásfürstin", "Im weißen Rössl", "Die Fledermaus", "Der Zigeunerbaron"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical erzählt von Alexander Hamilton?", a: ["Hamilton", "1776", "Assassins", "Ragtime"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical gibt es rollschuhfahrende Züge?", a: ["Starlight Express", "Cats", "Hair", "Jesus Christ Superstar"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical basiert auf einem Disney-Film über einen fliegenden Teppich?", a: ["Aladdin", "Pocahontas", "Herkules", "Mulan"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical kommt 'Let It Go' vor?", a: ["Die Eiskönigin", "Wicked", "Anastasia", "Newsies"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical erzählt von einem grünen Oger?", a: ["Shrek", "Wicked", "Into the Woods", "Spamalot"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical gibt es 'You'll Be Back'?", a: ["Hamilton", "Six", "& Juliet", "The Book of Mormon"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical handelt von den Hexen von Oz?", a: ["Wicked", "Der Zauberer von Oz", "Oz - The Musical", "Oz Reimagined"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical kommt 'Cell Block Tango' vor?", a: ["Chicago", "Nine", "Sweet Charity", "Cabaret"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical basiert auf einem Märchen der Brüder Grimm?", a: ["Into the Woods", "Hänsel und Gretel", "Rapunzel", "Schneewittchen"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical gibt es 'The Music of the Night'?", a: ["Das Phantom der Oper", "Jekyll & Hyde", "Tanz der Vampire", "Elisabeth"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical spielt auf der Titanic?", a: ["Titanic", "Unsinkable Molly Brown", "Voyage", "Lifeboat"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical kommt 'Seasons of Love' vor?", a: ["Rent", "Hair", "Spring Awakening", "Godspell"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical erzählt von den sechs Frauen Heinrichs VIII.?", a: ["Six", "Anne Boleyn", "Tudor", "Wolf Hall"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical gibt es 'Popular'?", a: ["Wicked", "Legally Blonde", "Mean Girls", "Heathers"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical basiert auf einem Buch von Roald Dahl?", a: ["Matilda", "Charlie und die Schokoladenfabrik", "James und der Riesenpfirsich", "Der fantastische Mr. Fox"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical kommt 'One Day More' vor?", a: ["Les Misérables", "Miss Saigon", "Chess", "The Scarlet Pimpernel"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical handelt von einem Vampir?", a: ["Tanz der Vampire", "Dracula", "Lestat", "Carrie"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical gibt es 'Summer Nights'?", a: ["Grease", "Hairspray", "Footloose", "Dirty Dancing"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical spielt in Wien?", a: ["Elisabeth", "Mozart!", "Rebecca", "Ludwig²"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical kommt 'Don't Cry for Me Argentina' vor?", a: ["Evita", "Chess", "Miss Saigon", "Piaf"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical basiert auf einem Film von Mel Brooks?", a: ["The Producers", "Young Frankenstein", "Blazing Saddles", "Spaceballs"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical gibt es 'Aquarius'?", a: ["Hair", "Godspell", "Jesus Christ Superstar", "Tommy"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical erzählt vom Untergang der Titanic?", a: ["Titanic", "Bandstand", "Ragtime", "Show Boat"], c: 0, cat: "Musicals"},
+            {q: "In welchem Musical kommt 'Belle' vor?", a: ["Die Schöne und das Biest", "Notre Dame de Paris", "Der Glöckner von Notre Dame", "Gaston"], c: 0, cat: "Musicals"},
+            {q: "Welches Musical wurde von Queen-Songs inspiriert?", a: ["We Will Rock You", "Bohemian Rhapsody", "Killer Queen", "The Show Must Go On"], c: 0, cat: "Musicals"},
+
+            // MUSIK-EPOCHEN (40 Fragen)
+            {q: "In welcher Epoche lebte Johann Sebastian Bach?", a: ["Barock", "Klassik", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche folgte auf die Renaissance?", a: ["Barock", "Klassik", "Romantik", "Mittelalter"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche lebte Mozart?", a: ["Klassik", "Barock", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche war geprägt von Gregorianischen Gesängen?", a: ["Mittelalter", "Renaissance", "Barock", "Klassik"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche lebte Beethoven hauptsächlich?", a: ["Klassik/Romantik", "Barock", "Renaissance", "Moderne"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche wird oft mit Verzierungen verbunden?", a: ["Barock", "Klassik", "Romantik", "Moderne"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche lebte Franz Schubert?", a: ["Romantik", "Klassik", "Barock", "Moderne"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche umfasst etwa 1750-1820?", a: ["Klassik", "Barock", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche entstanden die ersten Sinfonien?", a: ["Barock/Klassik", "Renaissance", "Romantik", "Moderne"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche wird mit Chopin verbunden?", a: ["Romantik", "Klassik", "Barock", "Impressionismus"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche wurde die Oper erfunden?", a: ["Barock", "Renaissance", "Klassik", "Romantik"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche folgte auf die Klassik?", a: ["Romantik", "Barock", "Moderne", "Impressionismus"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche lebte Palestrina?", a: ["Renaissance", "Barock", "Mittelalter", "Klassik"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche umfasst etwa 1600-1750?", a: ["Barock", "Renaissance", "Klassik", "Mittelalter"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche lebte Debussy?", a: ["Impressionismus", "Romantik", "Moderne", "Klassik"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche wird mit Richard Wagner verbunden?", a: ["Romantik", "Klassik", "Moderne", "Barock"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche entstanden Madrigale?", a: ["Renaissance", "Barock", "Mittelalter", "Klassik"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche wird oft als 'Zeitalter der Vernunft' bezeichnet?", a: ["Klassik", "Romantik", "Barock", "Aufklärung"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche lebte Strawinsky?", a: ["Moderne/20. Jahrhundert", "Romantik", "Impressionismus", "Klassik"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche betonte Emotionen und Individualität?", a: ["Romantik", "Klassik", "Barock", "Renaissance"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche wurde die Sonatenhauptsatzform entwickelt?", a: ["Klassik", "Barock", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche umfasst etwa 1450-1600?", a: ["Renaissance", "Barock", "Mittelalter", "Klassik"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche lebte Vivaldi?", a: ["Barock", "Klassik", "Renaissance", "Romantik"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche folgte auf die Romantik?", a: ["Impressionismus/Moderne", "Klassik", "Barock", "Renaissance"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche entstand die Fuge als Form?", a: ["Barock", "Renaissance", "Klassik", "Romantik"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche wird mit Haydn verbunden?", a: ["Klassik", "Barock", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche lebte Monteverdi?", a: ["Renaissance/Barock", "Barock", "Klassik", "Mittelalter"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche betonte Klarheit und Balance?", a: ["Klassik", "Romantik", "Barock", "Moderne"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche lebte Brahms?", a: ["Romantik", "Klassik", "Moderne", "Barock"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche wird mit Arnold Schönberg verbunden?", a: ["Moderne/Zweite Wiener Schule", "Romantik", "Impressionismus", "Klassik"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche entstanden Minnesänger?", a: ["Mittelalter", "Renaissance", "Barock", "Klassik"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche umfasst etwa 1820-1900?", a: ["Romantik", "Klassik", "Moderne", "Barock"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche lebte Händel?", a: ["Barock", "Klassik", "Renaissance", "Romantik"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche wird mit Programmmusik verbunden?", a: ["Romantik", "Klassik", "Barock", "Moderne"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche entstanden Troubadoure?", a: ["Mittelalter", "Renaissance", "Barock", "Klassik"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche wird mit Ravel verbunden?", a: ["Impressionismus", "Romantik", "Moderne", "Klassik"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche wurde das Oratorium populär?", a: ["Barock", "Renaissance", "Klassik", "Romantik"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche betonte Kontrapunkt?", a: ["Barock", "Klassik", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
+            {q: "In welcher Epoche lebte Liszt?", a: ["Romantik", "Klassik", "Moderne", "Barock"], c: 0, cat: "Epochen"},
+            {q: "Welche Epoche wird mit Atonalität verbunden?", a: ["Moderne/20. Jahrhundert", "Romantik", "Impressionismus", "Klassik"], c: 0, cat: "Epochen"}
+        ];
+
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        // Event Listeners für Custom Radio Button
+        document.querySelectorAll('input[name="questionCount"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const customContainer = document.getElementById('customNumberContainer');
+                if (this.value === 'custom') {
+                    customContainer.style.display = 'flex';
+                } else {
+                    customContainer.style.display = 'none';
+                }
+            });
+        });
+
+        function startQuiz() {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.style.display = 'none';
+
+            // Kategorien sammeln
+            const selectedCategories = [];
+            document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                selectedCategories.push(cb.value);
+            });
+
+            if (selectedCategories.length === 0) {
+                errorMsg.textContent = 'Bitte wähle mindestens eine Kategorie aus!';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            // Fragenanzahl ermitteln
+            const selectedRadio = document.querySelector('input[name="questionCount"]:checked');
+            let questionCount;
+
+            if (selectedRadio.value === 'custom') {
+                questionCount = parseInt(document.getElementById('customNumber').value);
+                if (isNaN(questionCount) || questionCount < 1) {
+                    errorMsg.textContent = 'Bitte gib eine gültige Anzahl an Fragen ein!';
+                    errorMsg.style.display = 'block';
+                    return;
+                }
+            } else {
+                questionCount = parseInt(selectedRadio.value);
+            }
+
+            // Fragen filtern nach Kategorien
+            let availableQuestions = allQuestions.filter(q => selectedCategories.includes(q.cat));
+
+            if (availableQuestions.length === 0) {
+                errorMsg.textContent = 'Keine Fragen für die gewählten Kategorien verfügbar!';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            // Wenn mehr Fragen gewünscht als verfügbar, alle nehmen
+            if (questionCount > availableQuestions.length) {
+                questionCount = availableQuestions.length;
+            }
+
+            // Fragen mischen und auswählen
+            shuffleArray(availableQuestions);
+            questions = availableQuestions.slice(0, questionCount);
+
+            // Quiz starten
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            document.getElementById('totalQuestions').textContent = questions.length;
+            showQuestion();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function showQuestion() {
+            answered = false;
+            const question = questions[currentQuestionIndex];
+
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('question').textContent = question.q;
+
+            const answersContainer = document.getElementById('answers');
+            answersContainer.innerHTML = '';
+
+            // Antworten mit Index-Mapping shuffeln
+            const shuffledAnswers = question.a.map((answer, index) => ({
+                text: answer,
+                isCorrect: index === question.c
+            }));
+
+            shuffleArray(shuffledAnswers);
+
+            // Buttons erstellen
+            shuffledAnswers.forEach((item) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = item.text;
+                btn.onclick = () => checkAnswer(item.isCorrect);
+                answersContainer.appendChild(btn);
+            });
+
+            document.getElementById('nextBtn').classList.add('hidden');
+            updateProgress();
+        }
+
+        function checkAnswer(isCorrect) {
+            if (answered) return;
+
+            answered = true;
+            const question = questions[currentQuestionIndex];
+            const correctAnswer = question.a[question.c];
+            const buttons = document.querySelectorAll('.answer-btn');
+
+            buttons.forEach((btn) => {
+                btn.classList.add('disabled');
+
+                // Korrekte Antwort grün markieren
+                if (btn.textContent === correctAnswer) {
+                    btn.classList.add('correct');
+                }
+
+                // Wenn falsche Antwort geklickt wurde, rot markieren
+                if (!isCorrect && btn.textContent !== correctAnswer) {
+                    // Prüfen ob dieser Button geklickt wurde
+                    if (event && event.target === btn) {
+                        btn.classList.add('wrong');
+                    }
+                }
+            });
+
+            if (isCorrect) {
+                score++;
+                createStars();
+                document.getElementById('score').textContent = score;
+            } else {
+                // Falsch geklickten Button markieren
+                event.target.classList.add('wrong');
+            }
+
+            document.getElementById('nextBtn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressBar').textContent = Math.round(progress) + '%';
+        }
+
+        function showResults() {
+            document.getElementById('quizScreen').classList.add('hidden');
+            const resultScreen = document.getElementById('resultScreen');
+            resultScreen.classList.remove('hidden');
+            resultScreen.classList.add('celebration');
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalTotal').textContent = questions.length;
+
+            const percentage = (score / questions.length) * 100;
+            let stars = '';
+            let message = '';
+
+            if (percentage >= 90) {
+                stars = '⭐⭐⭐⭐⭐';
+                message = 'Fantastisch! Du bist ein wahrer Musik-Experte! 🎉';
+            } else if (percentage >= 75) {
+                stars = '⭐⭐⭐⭐';
+                message = 'Sehr gut! Du kennst dich wirklich aus! 🎵';
+            } else if (percentage >= 60) {
+                stars = '⭐⭐⭐';
+                message = 'Gut gemacht! Du hast solides Musikwissen! 🎶';
+            } else if (percentage >= 40) {
+                stars = '⭐⭐';
+                message = 'Nicht schlecht! Es gibt noch viel zu entdecken! 🎼';
+            } else {
+                stars = '⭐';
+                message = 'Das war ein Anfang! Übe weiter! 🎹';
+            }
+
+            document.getElementById('starRating').textContent = stars;
+            document.getElementById('resultMessage').textContent = message;
+
+            createCelebration();
+        }
+
+        function createStars() {
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    star.textContent = '⭐';
+                    star.style.left = Math.random() * 100 + '%';
+                    document.body.appendChild(star);
+
+                    setTimeout(() => star.remove(), 3000);
+                }, i * 100);
+            }
+        }
+
+        function createCelebration() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    star.textContent = ['⭐', '🎵', '🎶', '🎼'][Math.floor(Math.random() * 4)];
+                    star.style.left = Math.random() * 100 + '%';
+                    document.body.appendChild(star);
+
+                    setTimeout(() => star.remove(), 3000);
+                }, i * 50);
+            }
+        }
+    </script>
+</body>
+</html>
