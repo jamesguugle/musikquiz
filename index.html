@@ -1,870 +1,683 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline';">
-    <title>Musik-Quiz - 200 Fragen</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stromversorgung Simulator – LIST Ing</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none}
+  body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
+  header{
+    background:#E84E0F;
+    color:white;padding:10px 24px;
+    display:flex;align-items:center;gap:16px;
+    box-shadow:0 2px 14px rgba(232,78,15,0.35);
+  }
+  .logo-wrap img{height:52px;display:block;filter:none}
+  .header-divider{width:1px;height:44px;background:rgba(255,255,255,0.35);margin:0 4px}
+  header h1{font-size:1.15rem;font-weight:700;letter-spacing:.3px;line-height:1.2}
+  header span{font-size:0.75rem;opacity:.8}
+  .header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .badge{
+    color:white;padding:4px 12px;border-radius:20px;
+    font-size:0.7rem;font-weight:700;background:rgba(0,0,0,0.25);
+    white-space:nowrap;border:1px solid rgba(255,255,255,0.3);
+  }
+  #exportBtn{
+    background:white;color:#E84E0F;border:none;
+    padding:7px 16px;border-radius:20px;font-size:0.75rem;
+    font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.2);transition:all .2s;
+  }
+  #exportBtn:hover{background:#fff3ef;transform:scale(1.03)}
+  #exportBtn:active{transform:scale(.97)}
+  #exportBtn svg{width:14px;height:14px}
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 800px;
-            width: 100%;
-            padding: 40px;
-            position: relative;
-            z-index: 10;
-        }
+  .main{
+    display:grid;grid-template-columns:340px 1fr;
+    gap:14px;padding:14px;max-width:1500px;margin:0 auto;
+  }
 
-        h1 {
-            color: #764ba2;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
+  .panel{background:white;border-radius:12px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,0.06)}
+  .panel h2{
+    font-size:.85rem;font-weight:700;color:#E84E0F;
+    margin-bottom:10px;padding-bottom:7px;
+    border-bottom:2px solid #fff3ef;
+    display:flex;align-items:center;gap:6px;
+  }
+  .section-title{
+    font-size:.62rem;font-weight:700;text-transform:uppercase;
+    letter-spacing:1px;color:#bbb;margin:10px 0 7px;
+  }
+  .slider-group{margin-bottom:10px}
+  .slider-label{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:3px;font-size:.75rem;font-weight:600;color:#555;
+  }
+  .slider-label .val{
+    background:#fff3ef;color:#E84E0F;font-weight:700;
+    padding:1px 7px;border-radius:5px;font-size:.78rem;
+    min-width:72px;text-align:center;
+  }
+  input[type=range]{width:100%;accent-color:#E84E0F;cursor:pointer;height:5px}
+  .slider-minmax{display:flex;justify-content:space-between;font-size:.6rem;color:#ccc;margin-top:1px}
+  .divider{border:none;border-top:1px solid #f0f0f0;margin:9px 0}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .toggle-label{font-size:.75rem;font-weight:600;color:#555}
+  .toggle{position:relative;width:40px;height:21px}
+  .toggle input{opacity:0;width:0;height:0}
+  .slider-toggle{
+    position:absolute;inset:0;background:#ddd;
+    border-radius:21px;cursor:pointer;transition:.3s;
+  }
+  .slider-toggle:before{
+    content:'';position:absolute;width:15px;height:15px;
+    left:3px;top:3px;background:white;border-radius:50%;transition:.3s;
+  }
+  input:checked+.slider-toggle{background:#E84E0F}
+  input:checked+.slider-toggle:before{transform:translateX(19px)}
 
-        .quiz-info {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
+  .right{display:flex;flex-direction:column;gap:12px}
 
-        .progress-bar {
-            background: #e0e0e0;
-            height: 30px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            overflow: hidden;
-            position: relative;
-        }
+  .status-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .kpi{
+    background:white;border-radius:12px;padding:12px 10px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.06);text-align:center;
+  }
+  .kpi .kpi-val{font-size:1.5rem;font-weight:800;line-height:1}
+  .kpi .kpi-label{font-size:.65rem;color:#999;margin-top:4px;font-weight:600}
+  .kpi .kpi-sub{font-size:.63rem;color:#bbb;margin-top:2px}
+  .kpi.green .kpi-val{color:#27ae60}
+  .kpi.orange .kpi-val{color:#e67e22}
+  .kpi.red .kpi-val{color:#e63946}
+  .kpi.blue .kpi-val{color:#E84E0F}
 
-        .progress-fill {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
+  .alert{
+    padding:8px 12px;border-radius:8px;font-size:.75rem;
+    font-weight:600;margin-top:4px;
+  }
+  .alert.ok{background:#d5f5e3;color:#1e8449}
+  .alert.warn{background:#fdebd0;color:#a04000}
+  .alert.danger{background:#fadbd8;color:#922b21}
 
-        .question-container {
-            margin-bottom: 30px;
-        }
+  .card{
+    background:white;border-radius:12px;padding:14px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.06);
+  }
+  .card h2{
+    font-size:.85rem;font-weight:700;color:#E84E0F;
+    margin-bottom:8px;padding-bottom:7px;
+    border-bottom:2px solid #fff3ef;
+    display:flex;align-items:center;gap:6px;
+  }
+  canvas#flowCanvas{width:100%;border-radius:6px;background:#f8f9fa}
+  canvas#timeChart{width:100%}
 
-        .question {
-            font-size: 1.3em;
-            color: #333;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
+  .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.68rem;margin-top:7px}
+  .legend-item{display:flex;align-items:center;gap:4px}
+  .legend-dot{width:9px;height:9px;border-radius:50%}
 
-        .answers {
-            display: grid;
-            gap: 15px;
-        }
+  #exportOverlay{
+    display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,.55);z-index:9999;
+    align-items:center;justify-content:center;flex-direction:column;gap:14px;
+    color:white;font-size:1rem;font-weight:600;
+  }
+  #exportOverlay.show{display:flex}
+  .spinner{
+    width:38px;height:38px;border:4px solid rgba(255,255,255,.3);
+    border-top:4px solid white;border-radius:50%;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #appRoot{background:#f0f2f5;min-height:100vh}
 
-        .answer-btn {
-            background: #f5f5f5;
-            border: 2px solid #ddd;
-            padding: 15px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1.1em;
-            text-align: left;
-        }
+  /* Speicher-Info Box */
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+  .info-box{
+    background:#fff3ef;border-radius:8px;padding:7px 10px;
+    font-size:.72rem;font-weight:700;color:#E84E0F;text-align:center;
+  }
+  .info-box span{display:block;font-size:.62rem;font-weight:600;color:#888;margin-bottom:2px}
 
-        .answer-btn:hover {
-            background: #e8e8ff;
-            border-color: #667eea;
-            transform: translateX(5px);
-        }
-
-        .answer-btn.correct {
-            background: #4caf50;
-            color: white;
-            border-color: #4caf50;
-        }
-
-        .answer-btn.wrong {
-            background: #f44336;
-            color: white;
-            border-color: #f44336;
-        }
-
-        .answer-btn.disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .next-btn, .start-btn, .restart-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 10px;
-            font-size: 1.2em;
-            cursor: pointer;
-            display: block;
-            margin: 30px auto 0;
-            transition: transform 0.3s ease;
-        }
-
-        .next-btn:hover, .start-btn:hover, .restart-btn:hover {
-            transform: scale(1.05);
-        }
-
-        .result-screen {
-            text-align: center;
-            display: none;
-        }
-
-        .result-screen h2 {
-            color: #764ba2;
-            font-size: 2.5em;
-            margin-bottom: 30px;
-        }
-
-        .score-display {
-            font-size: 3em;
-            color: #667eea;
-            margin: 30px 0;
-            font-weight: bold;
-        }
-
-        .stars {
-            font-size: 4em;
-            margin: 20px 0;
-        }
-
-        .start-screen {
-            text-align: center;
-        }
-
-        .start-screen p {
-            font-size: 1.2em;
-            color: #666;
-            margin: 20px 0;
-        }
-
-        /* Auswahlbereich */
-        .selection-section {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 15px;
-            margin: 20px 0;
-            text-align: left;
-        }
-
-        .selection-section h3 {
-            color: #764ba2;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-
-        .checkbox-group {
-            display: grid;
-            gap: 12px;
-            margin: 15px 0;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            background: white;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .checkbox-item:hover {
-            border-color: #667eea;
-            background: #f0f0ff;
-        }
-
-        .checkbox-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            margin-right: 12px;
-            cursor: pointer;
-        }
-
-        .checkbox-item label {
-            cursor: pointer;
-            font-size: 1.1em;
-            flex: 1;
-        }
-
-        .radio-group {
-            display: grid;
-            gap: 10px;
-            margin: 15px 0;
-        }
-
-        .radio-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            background: white;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .radio-item:hover {
-            border-color: #667eea;
-            background: #f0f0ff;
-        }
-
-        .radio-item input[type="radio"] {
-            width: 20px;
-            height: 20px;
-            margin-right: 12px;
-            cursor: pointer;
-        }
-
-        .radio-item label {
-            cursor: pointer;
-            font-size: 1.1em;
-            flex: 1;
-        }
-
-        .custom-number-input {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            background: white;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-        }
-
-        .custom-number-input input[type="number"] {
-            width: 100px;
-            padding: 8px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 1.1em;
-        }
-
-        .error-message {
-            color: #f44336;
-            background: #ffebee;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            display: none;
-        }
-
-        /* Animationen */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .note {
-            position: absolute;
-            font-size: 3em;
-            animation: float 3s ease-in-out infinite;
-            opacity: 0.3;
-            pointer-events: none;
-        }
-
-        .star {
-            position: fixed;
-            color: gold;
-            font-size: 2em;
-            pointer-events: none;
-            animation: fall 3s linear;
-            z-index: 1000;
-        }
-
-        @keyframes fall {
-            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-        }
-
-        .celebration {
-            animation: fadeIn 0.5s ease;
-        }
-
-        .hidden {
-            display: none;
-        }
-    </style>
+  /* Summary */
+  #summaryTable{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font-size:.74rem}
+</style>
 </head>
 <body>
-    <div class="note" style="top: 10%; left: 10%;">🎵</div>
-    <div class="note" style="top: 20%; right: 15%; animation-delay: 0.5s;">🎶</div>
-    <div class="note" style="bottom: 30%; left: 20%; animation-delay: 1s;">🎼</div>
-    <div class="note" style="bottom: 20%; right: 25%; animation-delay: 1.5s;">🎵</div>
+<div id="appRoot">
 
-    <div class="container">
-        <h1>🎵 Großes Musik-Quiz 🎵</h1>
-        
-        <!-- Start-Bildschirm -->
-        <div id="startScreen" class="start-screen">
-            <p>Teste dein Wissen über Instrumente, Komponisten, Musicals und Musik-Epochen!</p>
-            
-            <div class="selection-section">
-                <h3>📚 Wähle deine Kategorien:</h3>
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="cat1" value="Instrumente" checked>
-                        <label for="cat1">🎺 Instrumente (60 Fragen)</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="cat2" value="Komponisten" checked>
-                        <label for="cat2">🎼 Komponisten (60 Fragen)</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="cat3" value="Musicals" checked>
-                        <label for="cat3">🎭 Musicals & Musikstücke (40 Fragen)</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="cat4" value="Epochen" checked>
-                        <label for="cat4">📜 Musik-Epochen (40 Fragen)</label>
-                    </div>
-                </div>
-            </div>
+<header id="appHeader">
+  <div class="logo-wrap" style="background:white;border-radius:8px;padding:4px 10px;display:flex;align-items:center;">
+    <img id="logoImg" src="data:image/jpeg;base64,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" alt="LIST ING" style="height:52px">
+  </div>
+  <div class="header-divider"></div>
+  <div>
+    <h1>⚡ Stromversorgung Simulator</h1>
+    <span>TGA Kalkulation | Neubau Halle + Ausbau</span>
+  </div>
+  <div class="header-right">
+    <div class="badge" id="statusBadge">WIRD BERECHNET…</div>
+    <button id="exportBtn" onclick="doExport()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 15V3m0 12-4-4m4 4 4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17"/>
+      </svg>
+      Als Bild speichern
+    </button>
+  </div>
+</header>
 
-            <div class="selection-section">
-                <h3>🎯 Wie viele Fragen möchtest du?</h3>
-                <div class="radio-group">
-                    <div class="radio-item">
-                        <input type="radio" id="q20" name="questionCount" value="20">
-                        <label for="q20">20 Fragen</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" id="q30" name="questionCount" value="30" checked>
-                        <label for="q30">30 Fragen</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" id="q40" name="questionCount" value="40">
-                        <label for="q40">40 Fragen</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" id="qCustom" name="questionCount" value="custom">
-                        <label for="qCustom">Eigene Anzahl:</label>
-                    </div>
-                </div>
-                <div id="customNumberContainer" class="custom-number-input" style="display: none;">
-                    <label for="customNumber">Anzahl Fragen:</label>
-                    <input type="number" id="customNumber" min="1" max="200" value="50">
-                </div>
-            </div>
+<div class="main" id="mainGrid">
+  <div>
+    <div class="panel">
+      <h2>🏭 Lasten – Gebäude</h2>
 
-            <div id="errorMessage" class="error-message"></div>
+      <div class="section-title">Halle</div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Hallenfläche</span><span class="val" id="v_halleFlaeche">10.000 m²</span></div>
+        <input type="range" id="halleFlaeche" min="1000" max="20000" step="500" value="10000">
+        <div class="slider-minmax"><span>1.000 m²</span><span>20.000 m²</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Leistungsdichte Halle</span><span class="val" id="v_halleLast">35 W/m²</span></div>
+        <input type="range" id="halleLast" min="5" max="80" step="1" value="35">
+        <div class="slider-minmax"><span>5 W/m²</span><span>80 W/m²</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Gleichzeitigkeitsfaktor Halle</span><span class="val" id="v_halleGlz">100 %</span></div>
+        <input type="range" id="halleGlz" min="10" max="100" step="5" value="100">
+        <div class="slider-minmax"><span>10 %</span><span>100 %</span></div>
+      </div>
 
-            <button class="start-btn" onclick="startQuiz()">Quiz starten 🎶</button>
-        </div>
+      <div class="section-title">Büro-/Ausbaufläche</div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Ausbaufläche</span><span class="val" id="v_bueroFlaeche">600 m²</span></div>
+        <input type="range" id="bueroFlaeche" min="0" max="5000" step="50" value="600">
+        <div class="slider-minmax"><span>0 m²</span><span>5.000 m²</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Leistungsdichte Ausbau</span><span class="val" id="v_bueroLast">45 W/m²</span></div>
+        <input type="range" id="bueroLast" min="10" max="120" step="1" value="45">
+        <div class="slider-minmax"><span>10 W/m²</span><span>120 W/m²</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Gleichzeitigkeitsfaktor Ausbau</span><span class="val" id="v_bueroGlz">100 %</span></div>
+        <input type="range" id="bueroGlz" min="10" max="100" step="5" value="100">
+        <div class="slider-minmax"><span>10 %</span><span>100 %</span></div>
+      </div>
 
-        <!-- Quiz-Bildschirm -->
-        <div id="quizScreen" class="hidden">
-            <div class="quiz-info">
-                <p>Frage <span id="currentQuestion">1</span> von <span id="totalQuestions">40</span></p>
-                <p style="margin-top: 10px;">Punkte: <span id="score">0</span></p>
-            </div>
+      <hr class="divider">
+      <h2>🔌 Netzanschluss &amp; NEA</h2>
+      <div class="slider-group">
+        <div class="slider-label"><span>Netzanschluss</span><span class="val" id="v_netz">150 kVA</span></div>
+        <input type="range" id="netz" min="50" max="2000" step="25" value="150">
+        <div class="slider-minmax"><span>50 kVA</span><span>2.000 kVA</span></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">⚙️ NEA aktiv</span>
+        <label class="toggle"><input type="checkbox" id="neaActive"><span class="slider-toggle"></span></label>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>NEA Leistung</span><span class="val" id="v_nea">500 kVA</span></div>
+        <input type="range" id="nea" min="50" max="2000" step="25" value="500">
+        <div class="slider-minmax"><span>50 kVA</span><span>2.000 kVA</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>⏱️ Laufzeit NEA</span><span class="val" id="v_neaLaufzeit">72 h</span></div>
+        <input type="range" id="neaLaufzeit" min="1" max="240" step="1" value="72">
+        <div class="slider-minmax"><span>1 h</span><span>240 h (10 Tage)</span></div>
+      </div>
 
-            <div class="progress-bar">
-                <div id="progressBar" class="progress-fill">0%</div>
-            </div>
+      <hr class="divider">
+      <h2>☀️ PV-Anlage</h2>
+      <div class="toggle-row">
+        <span class="toggle-label">☀️ PV aktiv</span>
+        <label class="toggle"><input type="checkbox" id="pvActive" checked><span class="slider-toggle"></span></label>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>PV Dachfläche</span><span class="val" id="v_pvFlaeche">10.000 m²</span></div>
+        <input type="range" id="pvFlaeche" min="0" max="20000" step="500" value="10000">
+        <div class="slider-minmax"><span>0 m²</span><span>20.000 m²</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>PV Leistung (kWp)</span><span class="val" id="v_pvKwp">1.000 kWp</span></div>
+        <input type="range" id="pvKwp" min="0" max="3000" step="50" value="1000">
+        <div class="slider-minmax"><span>0 kWp</span><span>3.000 kWp</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>PV Ertrag (akt. Tageszeit)</span><span class="val" id="v_pvErtrag">70 %</span></div>
+        <input type="range" id="pvErtrag" min="0" max="100" step="5" value="70">
+        <div class="slider-minmax"><span>Nacht 0 %</span><span>Spitze 100 %</span></div>
+      </div>
 
-            <div class="question-container">
-                <div id="question" class="question"></div>
-                <div id="answers" class="answers"></div>
-            </div>
+      <hr class="divider">
+      <h2>🔋 Batteriespeicher</h2>
+      <div class="toggle-row">
+        <span class="toggle-label">🔋 Speicher aktiv</span>
+        <label class="toggle"><input type="checkbox" id="batActive" checked><span class="slider-toggle"></span></label>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Speicherkapazität</span><span class="val" id="v_batKapazitaet">700 kWh</span></div>
+        <input type="range" id="batKapazitaet" min="0" max="5000" step="50" value="700">
+        <div class="slider-minmax"><span>0 kWh</span><span>5.000 kWh</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Ladezustand (SoC)</span><span class="val" id="v_batSoc">70 %</span></div>
+        <input type="range" id="batSoc" min="0" max="100" step="5" value="70">
+        <div class="slider-minmax"><span>0 %</span><span>100 %</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Max. Entladeleistung</span><span class="val" id="v_batLeistung">325 kW</span></div>
+        <input type="range" id="batLeistung" min="0" max="1000" step="25" value="325">
+        <div class="slider-minmax"><span>0 kW</span><span>1.000 kW</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>⏱️ Laufzeit Batterie</span><span class="val" id="v_batLaufzeit">2 h</span></div>
+        <input type="range" id="batLaufzeit" min="0.5" max="24" step="0.5" value="2">
+        <div class="slider-minmax"><span>0.5 h</span><span>24 h</span></div>
+      </div>
+    </div>
+  </div>
 
-            <button id="nextBtn" class="next-btn hidden" onclick="nextQuestion()">Nächste Frage →</button>
-        </div>
-
-        <!-- Ergebnis-Bildschirm -->
-        <div id="resultScreen" class="result-screen">
-            <h2>Quiz beendet! 🎉</h2>
-            <div class="score-display">
-                <span id="finalScore">0</span> / <span id="finalTotal">40</span>
-            </div>
-            <div class="stars" id="starRating"></div>
-            <p id="resultMessage" style="font-size: 1.4em; color: #333; margin: 20px 0;"></p>
-            <button class="restart-btn" onclick="location.reload()">Noch einmal spielen</button>
-        </div>
+  <div class="right">
+    <div class="status-bar">
+      <div class="kpi blue" id="kpi_last">
+        <div class="kpi-val" id="kv_last">–</div>
+        <div class="kpi-label">Spitzenlast Gesamt</div>
+        <div class="kpi-sub" id="ks_last">Halle + Ausbau</div>
+      </div>
+      <div class="kpi" id="kpi_netz">
+        <div class="kpi-val" id="kv_netz">–</div>
+        <div class="kpi-label">Netzanschluss-Auslastung</div>
+        <div class="kpi-sub" id="ks_netz">von 150 kVA</div>
+      </div>
+      <div class="kpi" id="kpi_pv">
+        <div class="kpi-val" id="kv_pv">–</div>
+        <div class="kpi-label">PV Erzeugung aktuell</div>
+        <div class="kpi-sub">kW (DC→AC)</div>
+      </div>
+      <div class="kpi" id="kpi_deck">
+        <div class="kpi-val" id="kv_deck">–</div>
+        <div class="kpi-label">Versorgungsdeckung</div>
+        <div class="kpi-sub" id="ks_deck">Gesamt</div>
+      </div>
     </div>
 
-    <script>
-        // Fragenkatalog
-        const allQuestions = [
-            // INSTRUMENTE (60 Fragen)
-            {q: "Wie viele Tasten hat ein Standard-Klavier?", a: ["88", "76", "61", "100"], c: 0, cat: "Instrumente"},
-            {q: "Woraus besteht ein Geigenbogen traditionell?", a: ["Rosshaare", "Nylonfäden", "Draht", "Menschenhaar"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument gehört zu den Holzblasinstrumenten?", a: ["Oboe", "Trompete", "Posaune", "Horn"], c: 0, cat: "Instrumente"},
-            {q: "Wie viele Saiten hat eine Standard-Gitarre?", a: ["6", "4", "8", "12"], c: 0, cat: "Instrumente"},
-            {q: "Welches ist das größte Streichinstrument im Orchester?", a: ["Kontrabass", "Cello", "Bratsche", "Geige"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt das traditionelle japanische Saiteninstrument?", a: ["Koto", "Sitar", "Banjo", "Ukulele"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument hat Pedale, Register und Pfeifen?", a: ["Orgel", "Klavier", "Harfe", "Akkordeon"], c: 0, cat: "Instrumente"},
-            {q: "Wie viele Ventile hat eine Standard-Trompete?", a: ["3", "2", "4", "5"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument wird mit einem Doppelrohrblatt gespielt?", a: ["Fagott", "Klarinette", "Flöte", "Saxophon"], c: 0, cat: "Instrumente"},
-            {q: "Wie nennt man die große Trommel im Schlagzeug?", a: ["Bass Drum", "Snare Drum", "Tom Tom", "Hi-Hat"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument erfand Adolphe Sax?", a: ["Saxophon", "Klarinette", "Trompete", "Tuba"], c: 0, cat: "Instrumente"},
-            {q: "Wie viele Saiten hat eine Violine?", a: ["4", "5", "6", "3"], c: 0, cat: "Instrumente"},
-            {q: "Welches ist das höchste Holzblasinstrument?", a: ["Piccolo-Flöte", "Flöte", "Oboe", "Klarinette"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt das schottische Dudelsack-Instrument?", a: ["Bagpipe", "Accordion", "Harmonica", "Pipe Organ"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument hat 47 Saiten und 7 Pedale?", a: ["Konzertharfe", "Klavier", "Cembalo", "Zither"], c: 0, cat: "Instrumente"},
-            {q: "Wie nennt man ein kleines Klavier?", a: ["Spinett", "Cembalo", "Orgel", "Harmonium"], c: 0, cat: "Instrumente"},
-            {q: "Welches Blechblasinstrument hat einen Zug statt Ventilen?", a: ["Posaune", "Trompete", "Horn", "Tuba"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt die kleinste Tuba?", a: ["Euphonium", "Sousaphon", "Helikon", "Bombardon"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument ist das Nationalinstrument von Irland?", a: ["Harfe", "Geige", "Dudelsack", "Flöte"], c: 0, cat: "Instrumente"},
-            {q: "Wie viele Tasten hat ein Akkordeon mindestens?", a: ["41", "88", "61", "120"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument gehört zur Familie der Zupfinstrumente?", a: ["Mandoline", "Oboe", "Klarinette", "Fagott"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt die hohe Holzquerflöte?", a: ["Piccolo", "Altflöte", "Bassflöte", "Panflöte"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument wird mit Schlägeln gespielt?", a: ["Xylophon", "Gitarre", "Cello", "Harfe"], c: 0, cat: "Instrumente"},
-            {q: "Wie nennt man die metallene Mundharmonika?", a: ["Blues Harp", "Melodica", "Kazoo", "Okarina"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument hat einen Schalltrichter und Ventile?", a: ["Trompete", "Geige", "Gitarre", "Klavier"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt das indische Saiteninstrument mit vielen Resonanzsaiten?", a: ["Sitar", "Koto", "Banjo", "Ukulele"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument ist eine kleine Gitarre aus Hawaii?", a: ["Ukulele", "Banjo", "Mandoline", "Balalaika"], c: 0, cat: "Instrumente"},
-            {q: "Wie viele Löcher hat eine Blockflöte (barock)?", a: ["8", "6", "10", "7"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument wird elektronisch verstärkt?", a: ["E-Gitarre", "Geige", "Flöte", "Klarinette"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt das größte Blechblasinstrument?", a: ["Tuba", "Posaune", "Horn", "Trompete"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument besteht aus Holzstäben unterschiedlicher Länge?", a: ["Marimba", "Trommel", "Becken", "Triangel"], c: 0, cat: "Instrumente"},
-            {q: "Wie nennt man eine kleine Geige?", a: ["Pochette", "Bratsche", "Cello", "Kontrabass"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument hat einen Blasebalg?", a: ["Akkordeon", "Gitarre", "Harfe", "Xylophon"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt die tiefe Klarinette?", a: ["Bassklarinette", "Oboe", "Fagott", "Kontrafagott"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument wird mit einem Bogen gestrichen?", a: ["Cello", "Gitarre", "Harfe", "Klavier"], c: 0, cat: "Instrumente"},
-            {q: "Wie viele Saiten hat ein Bass?", a: ["4", "6", "5", "3"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument klingt eine Oktave tiefer als notiert?", a: ["Kontrabass", "Cello", "Geige", "Bratsche"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt das australische Blasinstrument?", a: ["Didgeridoo", "Panflöte", "Okarina", "Kazoo"], c: 0, cat: "Instrumente"},
-            {q: "Welches Tasteninstrument hat Pfeifen wie eine Orgel?", a: ["Harmonium", "Klavier", "Cembalo", "Akkordeon"], c: 0, cat: "Instrumente"},
-            {q: "Wie nennt man die kleine Trommel im Schlagzeug?", a: ["Snare Drum", "Bass Drum", "Tom Tom", "Floor Tom"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument hat ein Schalloch in der Mitte?", a: ["Gitarre", "Geige", "Klavier", "Trompete"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt das tiefste Fagott?", a: ["Kontrafagott", "Bassfagott", "Tenorfagott", "Altfagott"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument wird im Jazz oft als 'Sax' abgekürzt?", a: ["Saxophon", "Klarinette", "Trompete", "Posaune"], c: 0, cat: "Instrumente"},
-            {q: "Wie viele Pedale hat ein Flügel normalerweise?", a: ["3", "2", "4", "1"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument ist ein elektronisches Tasteninstrument?", a: ["Synthesizer", "Cembalo", "Spinett", "Clavichord"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt die tiefe Geige?", a: ["Cello", "Bratsche", "Kontrabass", "Viola"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument hat rotierende Lautsprecher?", a: ["Hammond-Orgel", "Klavier", "Gitarre", "Synthesizer"], c: 0, cat: "Instrumente"},
-            {q: "Wie nennt man das metallene Perkussionsinstrument?", a: ["Triangel", "Trommel", "Pauke", "Xylophon"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument wird durch Luft zum Klingen gebracht?", a: ["Flöte", "Gitarre", "Klavier", "Harfe"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt das Hauptinstrument in der Rock-Band?", a: ["E-Gitarre", "Geige", "Harfe", "Oboe"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument wird mit Fingern gezupft?", a: ["Harfe", "Trompete", "Oboe", "Klarinette"], c: 0, cat: "Instrumente"},
-            {q: "Wie viele Saiten hat ein Banjo traditionell?", a: ["5", "4", "6", "8"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument wird oft in der Country-Musik verwendet?", a: ["Banjo", "Oboe", "Fagott", "Horn"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt die russische Gitarre mit dreieckigem Körper?", a: ["Balalaika", "Sitar", "Koto", "Ukulele"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument hat Metallplatten und wird angeschlagen?", a: ["Glockenspiel", "Trommel", "Pauke", "Becken"], c: 0, cat: "Instrumente"},
-            {q: "Wie nennt man die größte Pauke?", a: ["Große Trommel", "Snare", "Tom", "Kesselpauke"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument wird in der klassischen Musik 'Violine' genannt?", a: ["Geige", "Bratsche", "Cello", "Kontrabass"], c: 0, cat: "Instrumente"},
-            {q: "Wie heißt das Zupfinstrument mit rundem Korpus?", a: ["Banjo", "Geige", "Trompete", "Oboe"], c: 0, cat: "Instrumente"},
-            {q: "Welches Instrument hat die meisten Tasten?", a: ["Orgel", "Klavier", "Akkordeon", "Synthesizer"], c: 0, cat: "Instrumente"},
-            {q: "Wie nennt man eine kleine Trompete?", a: ["Kornett", "Posaune", "Tuba", "Horn"], c: 0, cat: "Instrumente"},
+    <div id="alertBox"></div>
 
-            // KOMPONISTEN (60 Fragen)
-            {q: "Wer komponierte die 'Mondscheinsonate'?", a: ["Ludwig van Beethoven", "Wolfgang Amadeus Mozart", "Johann Sebastian Bach", "Franz Schubert"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist wurde 'Wunderkind' genannt?", a: ["Wolfgang Amadeus Mozart", "Ludwig van Beethoven", "Franz Liszt", "Felix Mendelssohn"], c: 0, cat: "Komponisten"},
-            {q: "Wer schrieb 'Die vier Jahreszeiten'?", a: ["Antonio Vivaldi", "Johann Sebastian Bach", "Georg Friedrich Händel", "Henry Purcell"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist war taub?", a: ["Ludwig van Beethoven", "Johann Sebastian Bach", "Joseph Haydn", "Franz Schubert"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte den 'Nussknacker'?", a: ["Peter Tschaikowsky", "Igor Strawinsky", "Sergei Rachmaninow", "Dmitri Schostakowitsch"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist hatte 20 Kinder?", a: ["Johann Sebastian Bach", "Joseph Haydn", "Wolfgang Amadeus Mozart", "Antonio Vivaldi"], c: 0, cat: "Komponisten"},
-            {q: "Wer schrieb die Oper 'Carmen'?", a: ["Georges Bizet", "Giuseppe Verdi", "Giacomo Puccini", "Richard Wagner"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist komponierte die '9. Sinfonie' mit 'Ode an die Freude'?", a: ["Ludwig van Beethoven", "Johannes Brahms", "Gustav Mahler", "Anton Bruckner"], c: 0, cat: "Komponisten"},
-            {q: "Wer schrieb 'Eine kleine Nachtmusik'?", a: ["Wolfgang Amadeus Mozart", "Joseph Haydn", "Ludwig van Beethoven", "Franz Schubert"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist war auch ein virtuoser Pianist?", a: ["Franz Liszt", "Antonio Vivaldi", "Richard Wagner", "Giuseppe Verdi"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Die Zauberflöte'?", a: ["Wolfgang Amadeus Mozart", "Richard Wagner", "Giuseppe Verdi", "Giacomo Puccini"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist stammt aus Polen?", a: ["Frédéric Chopin", "Franz Liszt", "Antonín Dvořák", "Bedřich Smetana"], c: 0, cat: "Komponisten"},
-            {q: "Wer schrieb die 'Unvollendete Sinfonie'?", a: ["Franz Schubert", "Johannes Brahms", "Robert Schumann", "Felix Mendelssohn"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb den 'Bolero'?", a: ["Maurice Ravel", "Claude Debussy", "Erik Satie", "Camille Saint-Saëns"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Schwanensee'?", a: ["Peter Tschaikowsky", "Sergei Prokofjew", "Igor Strawinsky", "Dmitri Schostakowitsch"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist war der 'Walzerkönig'?", a: ["Johann Strauss (Sohn)", "Joseph Lanner", "Franz Lehár", "Emile Waldteufel"], c: 0, cat: "Komponisten"},
-            {q: "Wer schrieb 'Für Elise'?", a: ["Ludwig van Beethoven", "Wolfgang Amadeus Mozart", "Franz Schubert", "Robert Schumann"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist komponierte 'Der Karneval der Tiere'?", a: ["Camille Saint-Saëns", "Maurice Ravel", "Claude Debussy", "Gabriel Fauré"], c: 0, cat: "Komponisten"},
-            {q: "Wer schrieb die Oper 'Aida'?", a: ["Giuseppe Verdi", "Giacomo Puccini", "Georges Bizet", "Richard Wagner"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Bilder einer Ausstellung'?", a: ["Modest Mussorgski", "Nikolai Rimski-Korsakow", "Alexander Borodin", "Pjotr Tschaikowski"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte die 'Kleine Nachtmusik'?", a: ["Wolfgang Amadeus Mozart", "Joseph Haydn", "Luigi Boccherini", "Carl Philipp Emanuel Bach"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Finlandia'?", a: ["Jean Sibelius", "Edvard Grieg", "Carl Nielsen", "Johan Svendsen"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Die Moldau'?", a: ["Bedřich Smetana", "Antonín Dvořák", "Leoš Janáček", "Bohuslav Martinů"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Peer Gynt'?", a: ["Edvard Grieg", "Jean Sibelius", "Carl Nielsen", "Johan Svendsen"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Rhapsody in Blue'?", a: ["George Gershwin", "Aaron Copland", "Leonard Bernstein", "Duke Ellington"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Also sprach Zarathustra'?", a: ["Richard Strauss", "Gustav Mahler", "Anton Bruckner", "Max Reger"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Dornröschen' (Ballett)?", a: ["Peter Tschaikowsky", "Sergei Prokofjew", "Igor Strawinsky", "Aram Chatschaturjan"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Die Planeten'?", a: ["Gustav Holst", "Edward Elgar", "Ralph Vaughan Williams", "Benjamin Britten"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte den 'Hochzeitsmarsch'?", a: ["Felix Mendelssohn", "Richard Wagner", "Johann Sebastian Bach", "Charles Gounod"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'La Traviata'?", a: ["Giuseppe Verdi", "Giacomo Puccini", "Gioachino Rossini", "Vincenzo Bellini"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Carmina Burana'?", a: ["Carl Orff", "Paul Hindemith", "Kurt Weill", "Hans Werner Henze"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'West Side Story'?", a: ["Leonard Bernstein", "George Gershwin", "Richard Rodgers", "Stephen Sondheim"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Der Feuervogel'?", a: ["Igor Strawinsky", "Sergei Prokofjew", "Dmitri Schostakowitsch", "Aram Chatschaturjan"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Tosca'?", a: ["Giacomo Puccini", "Giuseppe Verdi", "Pietro Mascagni", "Ruggero Leoncavallo"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Ein Sommernachtstraum'?", a: ["Felix Mendelssohn", "Robert Schumann", "Carl Maria von Weber", "Johannes Brahms"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Aus der Neuen Welt' (Sinfonie)?", a: ["Antonín Dvořák", "Bedřich Smetana", "Leoš Janáček", "Bohuslav Martinů"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Präludium in C-Dur'?", a: ["Johann Sebastian Bach", "Georg Friedrich Händel", "Antonio Vivaldi", "Domenico Scarlatti"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Der Barbier von Sevilla'?", a: ["Gioachino Rossini", "Wolfgang Amadeus Mozart", "Giuseppe Verdi", "Gaetano Donizetti"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Tannhäuser'?", a: ["Richard Wagner", "Richard Strauss", "Carl Maria von Weber", "Otto Nicolai"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Boléro'?", a: ["Maurice Ravel", "Claude Debussy", "Erik Satie", "Francis Poulenc"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte '1812 Ouvertüre'?", a: ["Peter Tschaikowsky", "Modest Mussorgski", "Nikolai Rimski-Korsakow", "Alexander Borodin"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Messias'?", a: ["Georg Friedrich Händel", "Johann Sebastian Bach", "Henry Purcell", "Claudio Monteverdi"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Die Schöpfung'?", a: ["Joseph Haydn", "Wolfgang Amadeus Mozart", "Ludwig van Beethoven", "Franz Schubert"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Kinderszenen'?", a: ["Robert Schumann", "Felix Mendelssohn", "Johannes Brahms", "Franz Liszt"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Daphnis et Chloé'?", a: ["Maurice Ravel", "Claude Debussy", "Gabriel Fauré", "Camille Saint-Saëns"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Romeo und Julia' (Ouvertüre)?", a: ["Peter Tschaikowsky", "Hector Berlioz", "Sergei Prokofjew", "Charles Gounod"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Wassermusik'?", a: ["Georg Friedrich Händel", "Johann Sebastian Bach", "Antonio Vivaldi", "Arcangelo Corelli"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Die Frau ohne Schatten'?", a: ["Richard Strauss", "Richard Wagner", "Alban Berg", "Arnold Schönberg"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'La Bohème'?", a: ["Giacomo Puccini", "Giuseppe Verdi", "Gioachino Rossini", "Gaetano Donizetti"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Die verkaufte Braut'?", a: ["Bedřich Smetana", "Antonín Dvořák", "Leoš Janáček", "Bohuslav Martinů"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Scheherazade'?", a: ["Nikolai Rimski-Korsakow", "Modest Mussorgski", "Alexander Borodin", "César Cui"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Präludium und Fuge'?", a: ["Johann Sebastian Bach", "Dieterich Buxtehude", "Johann Pachelbel", "Georg Friedrich Händel"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Finlandia-Hymne'?", a: ["Jean Sibelius", "Edvard Grieg", "Carl Nielsen", "Johan Svendsen"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Sinfonie fantastique'?", a: ["Hector Berlioz", "Camille Saint-Saëns", "César Franck", "Gabriel Fauré"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Das Rheingold'?", a: ["Richard Wagner", "Richard Strauss", "Carl Maria von Weber", "Engelbert Humperdinck"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Nabucco'?", a: ["Giuseppe Verdi", "Giacomo Puccini", "Gioachino Rossini", "Vincenzo Bellini"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Clair de Lune'?", a: ["Claude Debussy", "Maurice Ravel", "Erik Satie", "Gabriel Fauré"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Ungarische Tänze'?", a: ["Johannes Brahms", "Franz Liszt", "Béla Bartók", "Zoltán Kodály"], c: 0, cat: "Komponisten"},
-            {q: "Wer komponierte 'Rigoletto'?", a: ["Giuseppe Verdi", "Giacomo Puccini", "Gaetano Donizetti", "Vincenzo Bellini"], c: 0, cat: "Komponisten"},
-            {q: "Welcher Komponist schrieb 'Salome'?", a: ["Richard Strauss", "Richard Wagner", "Alban Berg", "Arnold Schönberg"], c: 0, cat: "Komponisten"},
+    <!-- Speicher-Info -->
+    <div class="card" id="speicherCard">
+      <h2>⏱️ Speicher &amp; NEA – Laufzeit-Analyse</h2>
+      <div class="info-grid">
+        <div class="info-box"><span>Batterie – verfügbare Energie</span><span id="inf_batEnergie">–</span></div>
+        <div class="info-box"><span>Batterie – Autonomiezeit</span><span id="inf_batAuto">–</span></div>
+        <div class="info-box"><span>NEA – Kraftstoffverbrauch</span><span id="inf_neaVerbrauch">–</span></div>
+        <div class="info-box"><span>NEA – Volllast-Laufzeit</span><span id="inf_neaLaufzeit">–</span></div>
+      </div>
+    </div>
 
-            // MUSICALS & MUSIKSTÜCKE (40 Fragen)
-            {q: "In welchem Musical singt Maria 'My Favorite Things'?", a: ["The Sound of Music", "West Side Story", "My Fair Lady", "Cats"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical erzählt die Geschichte von T. E. Lawrence?", a: ["Lawrence von Arabien", "Miss Saigon", "Chess", "Evita"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical kommt der Song 'Memory' vor?", a: ["Cats", "Phantom der Oper", "Les Misérables", "Starlight Express"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical spielt in Argentinien?", a: ["Evita", "West Side Story", "Chicago", "Cabaret"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical gibt es den Song 'Defying Gravity'?", a: ["Wicked", "Hamilton", "Dear Evan Hansen", "The Book of Mormon"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical basiert auf einem Roman von Victor Hugo?", a: ["Les Misérables", "Notre Dame de Paris", "Der Glöckner von Notre Dame", "Das Phantom der Oper"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical kommt 'Hakuna Matata' vor?", a: ["Der König der Löwen", "Tarzan", "Aladdin", "Die Schöne und das Biest"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical wurde von ABBA-Songs inspiriert?", a: ["Mamma Mia!", "Chess", "Kristina från Duvemåla", "Thank You for the Music"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical singt 'The Phantom'?", a: ["Das Phantom der Oper", "Tanz der Vampire", "Jekyll & Hyde", "Dracula"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical spielt in der Prohibition?", a: ["Chicago", "Cabaret", "Guys and Dolls", "42nd Street"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical gibt es 'Do You Hear the People Sing'?", a: ["Les Misérables", "Miss Saigon", "Hamilton", "Newsies"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical basiert auf Romeo und Julia?", a: ["West Side Story", "& Juliet", "Romeo et Juliette", "Grease"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical kommt 'Tomorrow' vor?", a: ["Annie", "Oliver!", "Into the Woods", "Matilda"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical spielt in Berlin der 1930er?", a: ["Cabaret", "Ich war noch niemals in New York", "Hinterm Horizont", "Ludwig²"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical gibt es 'Ein bisschen Spaß muss sein'?", a: ["Die Csárdásfürstin", "Im weißen Rössl", "Die Fledermaus", "Der Zigeunerbaron"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical erzählt von Alexander Hamilton?", a: ["Hamilton", "1776", "Assassins", "Ragtime"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical gibt es rollschuhfahrende Züge?", a: ["Starlight Express", "Cats", "Hair", "Jesus Christ Superstar"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical basiert auf einem Disney-Film über einen fliegenden Teppich?", a: ["Aladdin", "Pocahontas", "Herkules", "Mulan"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical kommt 'Let It Go' vor?", a: ["Die Eiskönigin", "Wicked", "Anastasia", "Newsies"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical erzählt von einem grünen Oger?", a: ["Shrek", "Wicked", "Into the Woods", "Spamalot"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical gibt es 'You'll Be Back'?", a: ["Hamilton", "Six", "& Juliet", "The Book of Mormon"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical handelt von den Hexen von Oz?", a: ["Wicked", "Der Zauberer von Oz", "Oz - The Musical", "Oz Reimagined"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical kommt 'Cell Block Tango' vor?", a: ["Chicago", "Nine", "Sweet Charity", "Cabaret"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical basiert auf einem Märchen der Brüder Grimm?", a: ["Into the Woods", "Hänsel und Gretel", "Rapunzel", "Schneewittchen"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical gibt es 'The Music of the Night'?", a: ["Das Phantom der Oper", "Jekyll & Hyde", "Tanz der Vampire", "Elisabeth"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical spielt auf der Titanic?", a: ["Titanic", "Unsinkable Molly Brown", "Voyage", "Lifeboat"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical kommt 'Seasons of Love' vor?", a: ["Rent", "Hair", "Spring Awakening", "Godspell"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical erzählt von den sechs Frauen Heinrichs VIII.?", a: ["Six", "Anne Boleyn", "Tudor", "Wolf Hall"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical gibt es 'Popular'?", a: ["Wicked", "Legally Blonde", "Mean Girls", "Heathers"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical basiert auf einem Buch von Roald Dahl?", a: ["Matilda", "Charlie und die Schokoladenfabrik", "James und der Riesenpfirsich", "Der fantastische Mr. Fox"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical kommt 'One Day More' vor?", a: ["Les Misérables", "Miss Saigon", "Chess", "The Scarlet Pimpernel"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical handelt von einem Vampir?", a: ["Tanz der Vampire", "Dracula", "Lestat", "Carrie"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical gibt es 'Summer Nights'?", a: ["Grease", "Hairspray", "Footloose", "Dirty Dancing"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical spielt in Wien?", a: ["Elisabeth", "Mozart!", "Rebecca", "Ludwig²"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical kommt 'Don't Cry for Me Argentina' vor?", a: ["Evita", "Chess", "Miss Saigon", "Piaf"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical basiert auf einem Film von Mel Brooks?", a: ["The Producers", "Young Frankenstein", "Blazing Saddles", "Spaceballs"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical gibt es 'Aquarius'?", a: ["Hair", "Godspell", "Jesus Christ Superstar", "Tommy"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical erzählt vom Untergang der Titanic?", a: ["Titanic", "Bandstand", "Ragtime", "Show Boat"], c: 0, cat: "Musicals"},
-            {q: "In welchem Musical kommt 'Belle' vor?", a: ["Die Schöne und das Biest", "Notre Dame de Paris", "Der Glöckner von Notre Dame", "Gaston"], c: 0, cat: "Musicals"},
-            {q: "Welches Musical wurde von Queen-Songs inspiriert?", a: ["We Will Rock You", "Bohemian Rhapsody", "Killer Queen", "The Show Must Go On"], c: 0, cat: "Musicals"},
+    <div class="card">
+      <h2>🔄 Leistungsfluss – Momentaufnahme</h2>
+      <canvas id="flowCanvas" height="220"></canvas>
+    </div>
 
-            // MUSIK-EPOCHEN (40 Fragen)
-            {q: "In welcher Epoche lebte Johann Sebastian Bach?", a: ["Barock", "Klassik", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche folgte auf die Renaissance?", a: ["Barock", "Klassik", "Romantik", "Mittelalter"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche lebte Mozart?", a: ["Klassik", "Barock", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche war geprägt von Gregorianischen Gesängen?", a: ["Mittelalter", "Renaissance", "Barock", "Klassik"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche lebte Beethoven hauptsächlich?", a: ["Klassik/Romantik", "Barock", "Renaissance", "Moderne"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche wird oft mit Verzierungen verbunden?", a: ["Barock", "Klassik", "Romantik", "Moderne"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche lebte Franz Schubert?", a: ["Romantik", "Klassik", "Barock", "Moderne"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche umfasst etwa 1750-1820?", a: ["Klassik", "Barock", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche entstanden die ersten Sinfonien?", a: ["Barock/Klassik", "Renaissance", "Romantik", "Moderne"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche wird mit Chopin verbunden?", a: ["Romantik", "Klassik", "Barock", "Impressionismus"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche wurde die Oper erfunden?", a: ["Barock", "Renaissance", "Klassik", "Romantik"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche folgte auf die Klassik?", a: ["Romantik", "Barock", "Moderne", "Impressionismus"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche lebte Palestrina?", a: ["Renaissance", "Barock", "Mittelalter", "Klassik"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche umfasst etwa 1600-1750?", a: ["Barock", "Renaissance", "Klassik", "Mittelalter"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche lebte Debussy?", a: ["Impressionismus", "Romantik", "Moderne", "Klassik"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche wird mit Richard Wagner verbunden?", a: ["Romantik", "Klassik", "Moderne", "Barock"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche entstanden Madrigale?", a: ["Renaissance", "Barock", "Mittelalter", "Klassik"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche wird oft als 'Zeitalter der Vernunft' bezeichnet?", a: ["Klassik", "Romantik", "Barock", "Aufklärung"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche lebte Strawinsky?", a: ["Moderne/20. Jahrhundert", "Romantik", "Impressionismus", "Klassik"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche betonte Emotionen und Individualität?", a: ["Romantik", "Klassik", "Barock", "Renaissance"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche wurde die Sonatenhauptsatzform entwickelt?", a: ["Klassik", "Barock", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche umfasst etwa 1450-1600?", a: ["Renaissance", "Barock", "Mittelalter", "Klassik"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche lebte Vivaldi?", a: ["Barock", "Klassik", "Renaissance", "Romantik"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche folgte auf die Romantik?", a: ["Impressionismus/Moderne", "Klassik", "Barock", "Renaissance"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche entstand die Fuge als Form?", a: ["Barock", "Renaissance", "Klassik", "Romantik"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche wird mit Haydn verbunden?", a: ["Klassik", "Barock", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche lebte Monteverdi?", a: ["Renaissance/Barock", "Barock", "Klassik", "Mittelalter"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche betonte Klarheit und Balance?", a: ["Klassik", "Romantik", "Barock", "Moderne"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche lebte Brahms?", a: ["Romantik", "Klassik", "Moderne", "Barock"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche wird mit Arnold Schönberg verbunden?", a: ["Moderne/Zweite Wiener Schule", "Romantik", "Impressionismus", "Klassik"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche entstanden Minnesänger?", a: ["Mittelalter", "Renaissance", "Barock", "Klassik"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche umfasst etwa 1820-1900?", a: ["Romantik", "Klassik", "Moderne", "Barock"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche lebte Händel?", a: ["Barock", "Klassik", "Renaissance", "Romantik"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche wird mit Programmmusik verbunden?", a: ["Romantik", "Klassik", "Barock", "Moderne"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche entstanden Troubadoure?", a: ["Mittelalter", "Renaissance", "Barock", "Klassik"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche wird mit Ravel verbunden?", a: ["Impressionismus", "Romantik", "Moderne", "Klassik"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche wurde das Oratorium populär?", a: ["Barock", "Renaissance", "Klassik", "Romantik"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche betonte Kontrapunkt?", a: ["Barock", "Klassik", "Romantik", "Renaissance"], c: 0, cat: "Epochen"},
-            {q: "In welcher Epoche lebte Liszt?", a: ["Romantik", "Klassik", "Moderne", "Barock"], c: 0, cat: "Epochen"},
-            {q: "Welche Epoche wird mit Atonalität verbunden?", a: ["Moderne/20. Jahrhundert", "Romantik", "Impressionismus", "Klassik"], c: 0, cat: "Epochen"}
-        ];
+    <div class="card">
+      <h2>📊 Tagesverlauf – Leistungsbilanz (simuliert)</h2>
+      <canvas id="timeChart" height="185"></canvas>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#e63946"></div><span>Last gesamt</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f4a261"></div><span>Netzlimit</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f9c74f"></div><span>PV Erzeugung</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4cc9f0"></div><span>Batterie</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div><span>NEA</span></div>
+      </div>
+    </div>
 
-        let questions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let answered = false;
+    <div class="card" id="summaryCard">
+      <h2>📋 Zusammenfassung – Eingabewerte</h2>
+      <div id="summaryTable"></div>
+      <div style="margin-top:8px;font-size:.62rem;color:#aaa">
+        Stand: <span id="exportDate"></span> &nbsp;|&nbsp; LIST Ing – TGA Kalkulation &nbsp;|&nbsp; Stromversorgung Simulator
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 
-        // Event Listeners für Custom Radio Button
-        document.querySelectorAll('input[name="questionCount"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const customContainer = document.getElementById('customNumberContainer');
-                if (this.value === 'custom') {
-                    customContainer.style.display = 'flex';
-                } else {
-                    customContainer.style.display = 'none';
-                }
-            });
-        });
+<div id="exportOverlay">
+  <div class="spinner"></div>
+  <span>Bild wird erstellt…</span>
+</div>
 
-        function startQuiz() {
-            const errorMsg = document.getElementById('errorMessage');
-            errorMsg.style.display = 'none';
+<script>
+// ===================== SCHUTZ =====================
+document.documentElement.style.webkitUserSelect="none";
+document.documentElement.style.userSelect="none";
+function showProtectedAlert(e){e.preventDefault();alert("Inhalt ist geschützt!");return false;}
+document.addEventListener("contextmenu",showProtectedAlert);
+document.addEventListener("keydown",function(e){
+  if((e.ctrlKey&&(e.key==='c'||e.key==='x'||e.key==='u'||e.key==='s'||e.key==='p'))||
+     e.key==='F12'||e.key==='F5'&&e.ctrlKey){showProtectedAlert(e);}
+});
+document.addEventListener("dragstart",function(e){e.preventDefault();});
 
-            // Kategorien sammeln
-            const selectedCategories = [];
-            document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
-                selectedCategories.push(cb.value);
-            });
+// ===================== LOGO als Base64 =====================
+// Logo direkt im img-Tag eingebettet
 
-            if (selectedCategories.length === 0) {
-                errorMsg.textContent = 'Bitte wähle mindestens eine Kategorie aus!';
-                errorMsg.style.display = 'block';
-                return;
-            }
+// ===================== HELPERS =====================
+const $=id=>document.getElementById(id);
+const getVal=id=>parseFloat($(id).value);
+const getChk=id=>$(id).checked;
+const n=v=>v.toLocaleString('de-DE',{maximumFractionDigits:0});
 
-            // Fragenanzahl ermitteln
-            const selectedRadio = document.querySelector('input[name="questionCount"]:checked');
-            let questionCount;
+function updateLabels(){
+  $('v_halleFlaeche').textContent=n(getVal('halleFlaeche'))+' m²';
+  $('v_halleLast').textContent=getVal('halleLast')+' W/m²';
+  $('v_halleGlz').textContent=getVal('halleGlz')+' %';
+  $('v_bueroFlaeche').textContent=n(getVal('bueroFlaeche'))+' m²';
+  $('v_bueroLast').textContent=getVal('bueroLast')+' W/m²';
+  $('v_bueroGlz').textContent=getVal('bueroGlz')+' %';
+  $('v_netz').textContent=n(getVal('netz'))+' kVA';
+  $('v_nea').textContent=n(getVal('nea'))+' kVA';
+  $('v_neaLaufzeit').textContent=getVal('neaLaufzeit')+' h';
+  $('v_pvFlaeche').textContent=n(getVal('pvFlaeche'))+' m²';
+  $('v_pvKwp').textContent=n(getVal('pvKwp'))+' kWp';
+  $('v_pvErtrag').textContent=getVal('pvErtrag')+' %';
+  $('v_batKapazitaet').textContent=n(getVal('batKapazitaet'))+' kWh';
+  $('v_batSoc').textContent=getVal('batSoc')+' %';
+  $('v_batLeistung').textContent=n(getVal('batLeistung'))+' kW';
+  $('v_batLaufzeit').textContent=getVal('batLaufzeit')+' h';
+}
 
-            if (selectedRadio.value === 'custom') {
-                questionCount = parseInt(document.getElementById('customNumber').value);
-                if (isNaN(questionCount) || questionCount < 1) {
-                    errorMsg.textContent = 'Bitte gib eine gültige Anzahl an Fragen ein!';
-                    errorMsg.style.display = 'block';
-                    return;
-                }
-            } else {
-                questionCount = parseInt(selectedRadio.value);
-            }
+function calc(){
+  const halleF=getVal('halleFlaeche'), halleL=getVal('halleLast'), halleG=getVal('halleGlz')/100;
+  const bueroF=getVal('bueroFlaeche'), bueroL=getVal('bueroLast'), bueroG=getVal('bueroGlz')/100;
+  const netzKVA=getVal('netz'), neaKVA=getVal('nea'), neaLaufzeit=getVal('neaLaufzeit');
+  const pvKwp=getVal('pvKwp'), pvErtrag=getVal('pvErtrag')/100;
+  const batKap=getVal('batKapazitaet'), batSoc=getVal('batSoc')/100;
+  const batMaxKW=getVal('batLeistung'), batLaufzeit=getVal('batLaufzeit');
+  const pvOn=getChk('pvActive'), batOn=getChk('batActive'), neaOn=getChk('neaActive');
 
-            // Fragen filtern nach Kategorien
-            let availableQuestions = allQuestions.filter(q => selectedCategories.includes(q.cat));
+  const halleKW=halleF*halleL*halleG/1000;
+  const bueroKW=bueroF*bueroL*bueroG/1000;
+  const lastTotal=halleKW+bueroKW;
 
-            if (availableQuestions.length === 0) {
-                errorMsg.textContent = 'Keine Fragen für die gewählten Kategorien verfügbar!';
-                errorMsg.style.display = 'block';
-                return;
-            }
+  const pvKW=pvOn?pvKwp*pvErtrag*0.85:0;
+  // Batterie: Leistung limitiert durch max kW UND Energie/Laufzeit
+  const batAvailKWh=batKap*batSoc;
+  const batByEnergy=batLaufzeit>0?batAvailKWh/batLaufzeit:0;
+  const batKW=batOn?Math.min(batMaxKW,batByEnergy):0;
+  const neaKW=neaOn?neaKVA*0.8:0;
+  const netzKW=netzKVA*0.9;
 
-            // Wenn mehr Fragen gewünscht als verfügbar, alle nehmen
-            if (questionCount > availableQuestions.length) {
-                questionCount = availableQuestions.length;
-            }
+  const verfuegbar=netzKW+pvKW+batKW+neaKW;
+  const deckungPct=lastTotal>0?Math.min(100,verfuegbar/lastTotal*100):100;
+  const defizit=Math.max(0,lastTotal-verfuegbar);
+  const ueberschuss=Math.max(0,verfuegbar-lastTotal);
 
-            // Fragen mischen und auswählen
-            shuffleArray(availableQuestions);
-            questions = availableQuestions.slice(0, questionCount);
+  // Autonomiezeit Batterie bei aktueller Last (abzügl. Netz und PV)
+  const batBedarf=Math.max(0,lastTotal-netzKW-pvKW);
+  const batAutoStd=batBedarf>0?(batAvailKWh/batBedarf):999;
 
-            // Quiz starten
-            currentQuestionIndex = 0;
-            score = 0;
-            document.getElementById('startScreen').classList.add('hidden');
-            document.getElementById('quizScreen').classList.remove('hidden');
-            document.getElementById('totalQuestions').textContent = questions.length;
-            showQuestion();
-        }
+  // NEA Kraftstoff: ~0.25 l/kWh Dieselgenerator
+  const neaVerbrauchLh=neaKW*0.25;
+  const neaGesamtVerbrauch=neaVerbrauchLh*neaLaufzeit;
 
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
+  return {halleKW,bueroKW,lastTotal,pvKW,batKW,neaKW,netzKW,
+          netzKVA,neaKVA,neaLaufzeit,pvKwp,batKap,batSoc,batMaxKW,batLaufzeit,
+          verfuegbar,deckungPct,defizit,ueberschuss,pvOn,batOn,neaOn,
+          batAvailKWh,batAutoStd,batBedarf,neaVerbrauchLh,neaGesamtVerbrauch};
+}
 
-        function showQuestion() {
-            answered = false;
-            const question = questions[currentQuestionIndex];
+function updateKPIs(d){
+  $('kv_last').textContent=d.lastTotal>=1000?(d.lastTotal/1000).toFixed(2)+' MW':d.lastTotal.toFixed(0)+' kW';
+  $('ks_last').textContent=`Halle: ${d.halleKW.toFixed(0)} kW | Ausbau: ${d.bueroKW.toFixed(0)} kW`;
+  $('kpi_last').className='kpi '+(d.lastTotal>1000?'red':d.lastTotal>400?'orange':'blue');
 
-            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
-            document.getElementById('question').textContent = question.q;
+  const np=d.netzKVA>0?Math.min(999,d.lastTotal/(d.netzKVA*0.9)*100).toFixed(0):0;
+  $('kv_netz').textContent=np+' %';
+  $('ks_netz').textContent=`von ${d.netzKVA} kVA (≈${(d.netzKVA*0.9).toFixed(0)} kW)`;
+  $('kpi_netz').className='kpi '+(np>150?'red':np>100?'orange':'green');
 
-            const answersContainer = document.getElementById('answers');
-            answersContainer.innerHTML = '';
+  $('kv_pv').textContent=d.pvOn?d.pvKW.toFixed(0)+' kW':'— AUS';
+  $('kpi_pv').className='kpi '+(d.pvOn&&d.pvKW>0?'green':'orange');
 
-            // Antworten mit Index-Mapping shuffeln
-            const shuffledAnswers = question.a.map((answer, index) => ({
-                text: answer,
-                isCorrect: index === question.c
-            }));
+  $('kv_deck').textContent=d.deckungPct.toFixed(1)+' %';
+  $('ks_deck').textContent=d.defizit>0?`⚠️ Defizit: ${d.defizit.toFixed(0)} kW`:`✅ Überschuss: ${d.ueberschuss.toFixed(0)} kW`;
+  $('kpi_deck').className='kpi '+(d.deckungPct>=100?'green':d.deckungPct>=80?'orange':'red');
 
-            shuffleArray(shuffledAnswers);
+  const badge=$('statusBadge');
+  if(d.deckungPct>=100){badge.textContent='✅ VOLLSTÄNDIG VERSORGT';badge.style.background='rgba(0,0,0,0.25)';}
+  else if(d.deckungPct>=80){badge.textContent='⚠️ TEILWEISE VERSORGT';badge.style.background='rgba(0,0,0,0.4)';}
+  else{badge.textContent='🚨 UNTERVERSORGUNG!';badge.style.background='rgba(0,0,0,0.5)';}
+}
 
-            // Buttons erstellen
-            shuffledAnswers.forEach((item) => {
-                const btn = document.createElement('button');
-                btn.className = 'answer-btn';
-                btn.textContent = item.text;
-                btn.onclick = () => checkAnswer(item.isCorrect);
-                answersContainer.appendChild(btn);
-            });
+function updateSpeicherInfo(d){
+  $('inf_batEnergie').textContent=d.batOn?`${d.batAvailKWh.toFixed(0)} kWh`:'— Inaktiv';
+  const autoTxt=d.batOn?(d.batAutoStd>=99?'> 99 h':d.batAutoStd.toFixed(1)+' h'):'— Inaktiv';
+  $('inf_batAuto').textContent=autoTxt;
+  $('inf_neaVerbrauch').textContent=d.neaOn?`${d.neaVerbrauchLh.toFixed(0)} l/h`:'— Inaktiv';
+  $('inf_neaLaufzeit').textContent=d.neaOn?`${d.neaLaufzeit} h konfiguriert\n≈ ${d.neaGesamtVerbrauch.toFixed(0)} l Diesel`:'— Inaktiv';
+  if(d.neaOn){
+    $('inf_neaLaufzeit').innerHTML=`${d.neaLaufzeit} h konfiguriert<br><small style="font-size:.62rem;color:#b84a00">≈ ${d.neaGesamtVerbrauch.toFixed(0)} l Diesel ges.</small>`;
+  }
+}
 
-            document.getElementById('nextBtn').classList.add('hidden');
-            updateProgress();
-        }
+function updateAlerts(d){
+  const box=$('alertBox'); box.innerHTML='';
+  const push=(cls,txt)=>{const div=document.createElement('div');div.className='alert '+cls;div.textContent=txt;box.appendChild(div);};
 
-        function checkAnswer(isCorrect) {
-            if (answered) return;
+  if(d.lastTotal>d.netzKVA*0.9)
+    push('danger',`🚨 Netzanschluss (${d.netzKVA} kVA) reicht NICHT für Spitzenlast (${d.lastTotal.toFixed(0)} kW)! Faktor: ${(d.lastTotal/(d.netzKVA*0.9)).toFixed(1)}× Überlast.`);
+  if(d.defizit>0&&!d.neaOn)
+    push('danger',`⛔ Ungedecktes Defizit: ${d.defizit.toFixed(0)} kW — Lasten reduzieren oder NEA aktivieren!`);
+  if(d.defizit>0&&d.neaOn&&d.neaKW>=d.defizit)
+    push('warn',`⚙️ NEA überbrückt Defizit von ${d.defizit.toFixed(0)} kW — nur im Notfall/Netzausfall!`);
+  if(d.batOn&&d.batAutoStd<2&&d.batAutoStd<99)
+    push('warn',`🔋 Batterie-Autonomiezeit kritisch: nur ${d.batAutoStd.toFixed(1)} h bei aktueller Last!`);
+  if(d.batOn&&d.batSoc<0.2)
+    push('warn',`🔋 Batteriespeicher fast leer (SoC ${(d.batSoc*100).toFixed(0)}%) — nur ${d.batAvailKWh.toFixed(0)} kWh verfügbar.`);
+  if(d.pvOn&&d.pvKW>0&&d.ueberschuss>50)
+    push('ok',`☀️ PV-Überschuss: ${d.ueberschuss.toFixed(0)} kW — Einspeisung oder Batterieladung möglich.`);
+  if(d.deckungPct>=100)
+    push('ok','✅ Vollversorgung gesichert. Alle Lasten können bedient werden.');
+}
 
-            answered = true;
-            const question = questions[currentQuestionIndex];
-            const correctAnswer = question.a[question.c];
-            const buttons = document.querySelectorAll('.answer-btn');
+function drawFlow(d){
+  const canvas=$('flowCanvas');
+  const W=canvas.offsetWidth||700; canvas.width=W; canvas.height=220;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,220);
+  const cx=W/2, busY=110;
 
-            buttons.forEach((btn) => {
-                btn.classList.add('disabled');
+  const sources=[];
+  sources.push({label:`Netz\n${(d.netzKVA*0.9).toFixed(0)} kW`,kw:d.netzKW,color:'#4361ee'});
+  if(d.pvOn) sources.push({label:`PV\n${d.pvKW.toFixed(0)} kW`,kw:d.pvKW,color:'#f9c74f'});
+  if(d.batOn) sources.push({label:`Batt.\n${d.batKW.toFixed(0)} kW`,kw:d.batKW,color:'#4cc9f0'});
+  if(d.neaOn) sources.push({label:`NEA\n${d.neaKW.toFixed(0)} kW`,kw:d.neaKW,color:'#27ae60'});
+  sources.forEach((s,i)=>{s.x=(i+1)*W/(sources.length+1);});
 
-                // Korrekte Antwort grün markieren
-                if (btn.textContent === correctAnswer) {
-                    btn.classList.add('correct');
-                }
+  ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=5; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(40,busY); ctx.lineTo(W-40,busY); ctx.stroke();
+  ctx.fillStyle='#1a1a2e'; ctx.font='bold 9px Segoe UI'; ctx.textAlign='center';
+  ctx.fillText('SAMMELSCHIENE',cx,busY-7);
 
-                // Wenn falsche Antwort geklickt wurde, rot markieren
-                if (!isCorrect && btn.textContent !== correctAnswer) {
-                    // Prüfen ob dieser Button geklickt wurde
-                    if (event && event.target === btn) {
-                        btn.classList.add('wrong');
-                    }
-                }
-            });
+  function rr(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();ctx.fill();ctx.stroke();
+  }
 
-            if (isCorrect) {
-                score++;
-                createStars();
-                document.getElementById('score').textContent = score;
-            } else {
-                // Falsch geklickten Button markieren
-                event.target.classList.add('wrong');
-            }
+  sources.forEach(s=>{
+    const pct=d.lastTotal>0?Math.min(1,s.kw/d.lastTotal):0;
+    ctx.strokeStyle=s.color; ctx.lineWidth=Math.max(1.5,pct*9);
+    ctx.beginPath(); ctx.moveTo(s.x,40); ctx.lineTo(s.x,busY-3); ctx.stroke();
+    ctx.fillStyle=s.color;
+    ctx.beginPath(); ctx.moveTo(s.x,busY-3); ctx.lineTo(s.x-5,busY-12); ctx.lineTo(s.x+5,busY-12); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=s.color+'25'; ctx.strokeStyle=s.color; ctx.lineWidth=1.5;
+    rr(s.x-45,5,90,30,6);
+    ctx.fillStyle='#1a1a2e'; ctx.font='bold 8px Segoe UI'; ctx.textAlign='center';
+    const ln=s.label.split('\n');
+    ctx.fillText(ln[0],s.x,18); ctx.font='7px Segoe UI'; ctx.fillText(ln[1],s.x,28);
+  });
 
-            document.getElementById('nextBtn').classList.remove('hidden');
-        }
+  const loads=[
+    {label:`Halle\n${d.halleKW.toFixed(0)} kW`,color:'#E84E0F',frac:d.lastTotal>0?d.halleKW/d.lastTotal:0},
+    {label:`Ausbau\n${d.bueroKW.toFixed(0)} kW`,color:'#fb8500',frac:d.lastTotal>0?d.bueroKW/d.lastTotal:0}
+  ];
+  loads.forEach((l,i)=>{
+    const lx=cx+(i===0?-80:80);
+    ctx.strokeStyle=l.color; ctx.lineWidth=Math.max(1.5,l.frac*9);
+    ctx.beginPath(); ctx.moveTo(lx,busY+3); ctx.lineTo(lx,178); ctx.stroke();
+    ctx.fillStyle=l.color;
+    ctx.beginPath(); ctx.moveTo(lx,178); ctx.lineTo(lx-5,168); ctx.lineTo(lx+5,168); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=l.color+'25'; ctx.strokeStyle=l.color; ctx.lineWidth=1.5;
+    rr(lx-45,180,90,30,6);
+    ctx.fillStyle='#1a1a2e'; ctx.font='bold 8px Segoe UI'; ctx.textAlign='center';
+    const ln=l.label.split('\n');
+    ctx.fillText(ln[0],lx,193); ctx.font='7px Segoe UI'; ctx.fillText(ln[1],lx,203);
+  });
 
-        function nextQuestion() {
-            currentQuestionIndex++;
+  const col=d.deckungPct>=100?'#27ae60':d.deckungPct>=80?'#e67e22':'#e63946';
+  ctx.beginPath(); ctx.arc(cx,busY,15,0,Math.PI*2); ctx.fillStyle=col; ctx.fill();
+  ctx.fillStyle='white'; ctx.font='bold 7px Segoe UI'; ctx.textAlign='center';
+  ctx.fillText(d.deckungPct.toFixed(0)+'%',cx,busY+3);
+}
 
-            if (currentQuestionIndex < questions.length) {
-                showQuestion();
-            } else {
-                showResults();
-            }
-        }
+function drawTimeChart(d){
+  const canvas=$('timeChart');
+  const W=canvas.offsetWidth||700; canvas.width=W; canvas.height=185;
+  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,185);
+  const pad={l:50,r:14,t:10,b:26};
+  const cw=W-pad.l-pad.r, ch=185-pad.t-pad.b;
+  const pvP=[0,0,0,0,0,0.05,0.15,0.35,0.55,0.75,0.88,0.95,1,0.95,0.88,0.75,0.55,0.35,0.15,0.05,0,0,0,0];
+  const ldP=[0.3,0.25,0.25,0.25,0.28,0.35,0.55,0.75,0.95,1,1,0.98,0.95,0.98,1,0.98,0.9,0.75,0.6,0.5,0.45,0.4,0.38,0.33];
+  const maxY=Math.max(d.lastTotal*1.15,d.pvKW*1.1,d.netzKW*1.15,200);
+  const toY=v=>pad.t+ch-(v/maxY)*ch;
+  const toX=h=>pad.l+(h/23)*cw;
 
-        function updateProgress() {
-            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('progressBar').textContent = Math.round(progress) + '%';
-        }
+  ctx.strokeStyle='#eee'; ctx.lineWidth=1;
+  for(let i=0;i<=5;i++){
+    const y=pad.t+(i/5)*ch;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke();
+    ctx.fillStyle='#aaa'; ctx.font='7px Segoe UI'; ctx.textAlign='right';
+    ctx.fillText(((1-i/5)*maxY).toFixed(0)+' kW',pad.l-4,y+3);
+  }
+  for(let h=0;h<24;h+=4){
+    ctx.fillStyle='#aaa'; ctx.font='7px Segoe UI'; ctx.textAlign='center';
+    ctx.fillText(h+':00',toX(h),185-7);
+  }
 
-        function showResults() {
-            document.getElementById('quizScreen').classList.add('hidden');
-            const resultScreen = document.getElementById('resultScreen');
-            resultScreen.classList.remove('hidden');
-            resultScreen.classList.add('celebration');
+  ctx.strokeStyle='#f4a261'; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(pad.l,toY(d.netzKW)); ctx.lineTo(pad.l+cw,toY(d.netzKW)); ctx.stroke();
+  ctx.setLineDash([]);
 
-            document.getElementById('finalScore').textContent = score;
-            document.getElementById('finalTotal').textContent = questions.length;
+  if(d.pvOn){
+    ctx.fillStyle='#f9c74f28';
+    ctx.beginPath();
+    pvP.forEach((p,h)=>{const y=toY(d.pvKW*p);h===0?ctx.moveTo(toX(h),y):ctx.lineTo(toX(h),y);});
+    ctx.lineTo(toX(23),toY(0)); ctx.lineTo(toX(0),toY(0)); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#f9c74f'; ctx.lineWidth=2;
+    ctx.beginPath();
+    pvP.forEach((p,h)=>{const y=toY(d.pvKW*p);h===0?ctx.moveTo(toX(h),y):ctx.lineTo(toX(h),y);});
+    ctx.stroke();
+  }
 
-            const percentage = (score / questions.length) * 100;
-            let stars = '';
-            let message = '';
+  if(d.batOn&&d.batKW>0){
+    ctx.strokeStyle='#4cc9f0'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+    ctx.beginPath();
+    ldP.forEach((p,h)=>{
+      const need=d.lastTotal*p, pvNow=d.pvOn?d.pvKW*pvP[h]:0;
+      const bv=Math.min(d.batKW,Math.max(0,need-d.netzKW-pvNow));
+      h===0?ctx.moveTo(toX(h),toY(bv)):ctx.lineTo(toX(h),toY(bv));
+    });
+    ctx.stroke(); ctx.setLineDash([]);
+  }
 
-            if (percentage >= 90) {
-                stars = '⭐⭐⭐⭐⭐';
-                message = 'Fantastisch! Du bist ein wahrer Musik-Experte! 🎉';
-            } else if (percentage >= 75) {
-                stars = '⭐⭐⭐⭐';
-                message = 'Sehr gut! Du kennst dich wirklich aus! 🎵';
-            } else if (percentage >= 60) {
-                stars = '⭐⭐⭐';
-                message = 'Gut gemacht! Du hast solides Musikwissen! 🎶';
-            } else if (percentage >= 40) {
-                stars = '⭐⭐';
-                message = 'Nicht schlecht! Es gibt noch viel zu entdecken! 🎼';
-            } else {
-                stars = '⭐';
-                message = 'Das war ein Anfang! Übe weiter! 🎹';
-            }
+  ctx.strokeStyle='#e63946'; ctx.lineWidth=2.5;
+  ctx.beginPath();
+  ldP.forEach((p,h)=>{const y=toY(d.lastTotal*p);h===0?ctx.moveTo(toX(h),y):ctx.lineTo(toX(h),y);});
+  ctx.stroke();
+}
 
-            document.getElementById('starRating').textContent = stars;
-            document.getElementById('resultMessage').textContent = message;
+function updateSummary(d){
+  const rows=[
+    ['Hallenfläche',n(getVal('halleFlaeche'))+' m²'],
+    ['LD Halle',getVal('halleLast')+' W/m²'],
+    ['GZF Halle',getVal('halleGlz')+' %'],
+    ['Ausbaufläche',n(getVal('bueroFlaeche'))+' m²'],
+    ['LD Ausbau',getVal('bueroLast')+' W/m²'],
+    ['GZF Ausbau',getVal('bueroGlz')+' %'],
+    ['Netzanschluss',n(getVal('netz'))+' kVA'],
+    ['NEA',getChk('neaActive')?n(getVal('nea'))+' kVA | '+getVal('neaLaufzeit')+' h':'Inaktiv'],
+    ['PV',getChk('pvActive')?n(getVal('pvKwp'))+' kWp | '+getVal('pvErtrag')+' %':'Inaktiv'],
+    ['Batterie',getChk('batActive')?n(getVal('batKapazitaet'))+' kWh | SoC '+getVal('batSoc')+' % | '+getVal('batLaufzeit')+' h':'Inaktiv'],
+    ['→ Spitzenlast',d.lastTotal.toFixed(0)+' kW'],
+    ['→ Verfügbar',d.verfuegbar.toFixed(0)+' kW'],
+    ['→ Deckung',d.deckungPct.toFixed(1)+' %'],
+    ['→ Batterie-Autonomie',d.batOn?(d.batAutoStd>=99?'>99 h':d.batAutoStd.toFixed(1)+' h'):'—'],
+  ];
+  $('summaryTable').innerHTML=rows.map(([k,v])=>
+    `<div style="color:#888;font-weight:600;font-size:.72rem">${k}</div><div style="font-weight:700;color:#1a1a2e;font-size:.72rem">${v}</div>`
+  ).join('');
+  const now=new Date();
+  $('exportDate').textContent=now.toLocaleDateString('de-DE')+' '+now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+}
 
-            createCelebration();
-        }
+function update(){
+  updateLabels();
+  const d=calc();
+  updateKPIs(d);
+  updateAlerts(d);
+  updateSpeicherInfo(d);
+  drawFlow(d);
+  drawTimeChart(d);
+  updateSummary(d);
+}
 
-        function createStars() {
-            for (let i = 0; i < 10; i++) {
-                setTimeout(() => {
-                    const star = document.createElement('div');
-                    star.className = 'star';
-                    star.textContent = '⭐';
-                    star.style.left = Math.random() * 100 + '%';
-                    document.body.appendChild(star);
+async function doExport(){
+  const overlay=$('exportOverlay');
+  overlay.classList.add('show');
+  await new Promise(r=>setTimeout(r,120));
+  try{
+    const dpr=2;
+    ['flowCanvas','timeChart'].forEach(id=>{
+      const c=$(id); const w=c.offsetWidth,h=c.offsetHeight;
+      c.width=w*dpr; c.height=h*dpr; c.getContext('2d').scale(dpr,dpr);
+    });
+    const d=calc(); drawFlow(d); drawTimeChart(d);
+    const canvas=await html2canvas($('appRoot'),{
+      scale:1.5,useCORS:true,allowTaint:true,
+      backgroundColor:'#f0f2f5',
+      ignoreElements:el=>el.id==='exportOverlay',
+      windowWidth:1500,
+    });
+    ['flowCanvas','timeChart'].forEach(id=>{
+      const c=$(id); c.width=c.offsetWidth; c.height=c.offsetHeight;
+    });
+    drawFlow(d); drawTimeChart(d);
+    const link=document.createElement('a');
+    const ts=new Date().toISOString().slice(0,16).replace('T','_').replace(':','');
+    link.download=`Stromversorgung_LIST_${ts}.png`;
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+  }catch(e){alert('Export fehlgeschlagen: '+e.message);}
+  overlay.classList.remove('show');
+}
 
-                    setTimeout(() => star.remove(), 3000);
-                }, i * 100);
-            }
-        }
-
-        function createCelebration() {
-            for (let i = 0; i < 50; i++) {
-                setTimeout(() => {
-                    const star = document.createElement('div');
-                    star.className = 'star';
-                    star.textContent = ['⭐', '🎵', '🎶', '🎼'][Math.floor(Math.random() * 4)];
-                    star.style.left = Math.random() * 100 + '%';
-                    document.body.appendChild(star);
-
-                    setTimeout(() => star.remove(), 3000);
-                }, i * 50);
-            }
-        }
-    </script>
+['halleFlaeche','halleLast','halleGlz','bueroFlaeche','bueroLast','bueroGlz',
+ 'netz','nea','neaLaufzeit','pvFlaeche','pvKwp','pvErtrag',
+ 'batKapazitaet','batSoc','batLeistung','batLaufzeit']
+  .forEach(id=>$(id).addEventListener('input',update));
+['pvActive','batActive','neaActive']
+  .forEach(id=>$(id).addEventListener('change',update));
+window.addEventListener('resize',update);
+update();
+</script>
 </body>
 </html>
